@@ -13,6 +13,7 @@ ThisBuild / crossScalaVersions := Seq(Scala3)
 
 val CatsVersion = "2.7.0"
 val CatsEffectVersion = "3.3.8"
+val CatsParseVersion = "0.3.6"
 val DisciplineVersion = "1.4.0"
 val RefinedVersion = "0.9.28"
 val ScodecBitsVersion = "1.1.30"
@@ -21,7 +22,7 @@ val DisciplineSpecs2Version = "2.0-44-19f6d7f"
 
 ThisBuild / scalacOptions ++= Seq("-new-syntax", "-indent", "-source:future")
 
-lazy val root = tlCrossRootProject.aggregate(core, likelihood, likelihoodLaws)
+lazy val root = tlCrossRootProject.aggregate(core, newick, likelihood, likelihoodLaws)
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
@@ -34,6 +35,16 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
       "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
       "org.specs2" %%% "specs2-core" % Specs2Version % Test,
       "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test
+    )
+  )
+
+lazy val newick = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("newick"))
+  .settings(
+    name := "cheshire-newick",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-parse" % CatsParseVersion
     )
   )
 
