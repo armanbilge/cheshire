@@ -41,7 +41,7 @@ def render(tree: Tree): String =
             go(subtree) *> Eval.later(length.foreach(sb ++= _.toString))
         } *> Eval.later(sb += ')') *> Eval.later(name.foreach(sb ++= _))
 
-  go(tree.subtree)
+  go(tree.subtree).value
   sb += ';'
 
   sb.result()
