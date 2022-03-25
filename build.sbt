@@ -18,7 +18,7 @@ val DisciplineVersion = "1.4.0"
 val RefinedVersion = "0.9.28"
 val ScodecBitsVersion = "1.1.30"
 val Specs2Version = "5.0.0"
-val DisciplineSpecs2Version = "2.0-44-19f6d7f"
+val DisciplineSpecs2Version = "2.0.0"
 
 ThisBuild / scalacOptions ++= Seq("-new-syntax", "-indent", "-source:future")
 
@@ -33,7 +33,6 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
       "org.typelevel" %%% "cats-core" % CatsVersion,
       "org.typelevel" %%% "cats-laws" % CatsVersion % Test,
       "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
-      "org.specs2" %%% "specs2-core" % Specs2Version % Test,
       "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test
     )
   )
@@ -44,7 +43,9 @@ lazy val newick = crossProject(JSPlatform, JVMPlatform)
   .settings(
     name := "cheshire-newick",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-parse" % CatsParseVersion
+      "org.typelevel" %%% "cats-parse" % CatsParseVersion,
+      "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
+      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test
     )
   )
 

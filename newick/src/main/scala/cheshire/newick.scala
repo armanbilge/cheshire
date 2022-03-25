@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-package cheshire
-package newick
+package cheshire.newick
 
 import cats.Applicative
 import cats.Defer
@@ -52,31 +51,32 @@ def render[F[_]: Applicative: Defer](tree: Tree): F[String] =
 def parse(s: String): Either[Parser.Error, Tree] =
   tree.parse(s).map(_._2)
 
-private val tree = Parser.start *> (subtree <* skip <* Parser.char(';').?).map(Tree(_)) <* Parser.end
+private val tree =
+  Parser.start *> (subtree <* skip <* Parser.char(';').?).map(Tree(_)) <* Parser.end
 
-private val subtree: Parser0[Subtree] = leaf | internal
+private def subtree: Parser0[Subtree] = leaf | internal
 
-private val internal =
-  (branchSet.surroundedBy(skip).between(Parser.char('('), Parser.char(')')) ~ name.?)
-    .map(Internal(_, _))
+private def internal =
+  (branchSet.surroundedBy(skip)
+    .between(Parser.char('('), Parser.char(')')) ~ name.?).map(Internal(_, _))
 
-private val branchSet = Defer[Parser0].fix[NonEmptyList[Branch]] { recurse =>
-  (branch ~ (skip *> Parser.char(',') *> skip *> recurse)).map { (branch, branchSet) =>
-    branchSet.append(branch)
+private def branchSet = Defer[Parser0].fix[NonEmptyList[Branch]] { recurse =>
+  (branch ~ (skip *> Parser.char(',') *> skip *> recurse)).map {
+    (branch, branchSet) => branchSet.append(branch)
   }
 }
 
-private val branch = ((subtree <* skip) ~ length.?).map(Branch(_, _))
+private def branch = ((subtree <* skip) ~ length.?).map(Branch(_, _))
 
-private val leaf = name.?.map(Leaf(_))
+private def leaf = name.?.map(Leaf(_))
 
-private val name =
+private def name =
   val unquoted =
     Parser.charIn(('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9') ++ "#*%/.\\-+_&").repAs[String]
   val quoted = (Rfc5234.vchar | Parser.charIn(' ')).repAs[String]
   (unquoted | quoted.surroundedBy(Rfc5234.dquote) | quoted.surroundedBy(Parser.char('\'')))
 
-private val length = Parser.char(':') *> Numbers.jsonNumber.map(BigDecimal(_))
+private def length = Parser.char(':') *> Numbers.jsonNumber.map(BigDecimal(_))
 
-private val skip = (comment.void | Parser.charIn(" \t\n").rep.void).rep0.void
-private val comment = Parser.anyChar.between(Parser.char('['), Parser.char(']'))
+private def skip = (comment.void | Parser.charIn(" \t\n").rep.void).rep0.void
+private def comment = Parser.anyChar.between(Parser.char('['), Parser.char(']'))
