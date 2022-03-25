@@ -17,16 +17,15 @@
 package cheshire
 package newick
 
-import cats.Eval
+import cats.Applicative
+import cats.Defer
+import cats.data.Chain
+import cats.data.NonEmptyList
+import cats.parse.Numbers
 import cats.parse.Parser
 import cats.parse.Parser0
 import cats.parse.Rfc5234
 import cats.syntax.all.*
-
-import scala.collection.mutable
-import cats.parse.Numbers
-import cats.data.NonEmptyList
-import cats.Defer
 
 final case class Tree(subtree: Subtree)
 sealed abstract class Subtree
@@ -61,20 +60,18 @@ private val length = Parser.char(':') *> Numbers.jsonNumber.map(BigDecimal(_))
 private val skip = (comment.void | Parser.charIn(" \t\n").rep.void).rep0.void
 private val comment = Parser.anyChar.between(Parser.char('['), Parser.char(']'))
 
-def render(tree: Tree): String =
-  val sb = new mutable.StringBuilder
-
-  def go(subtree: Subtree): Eval[Unit] =
+def render[F[_]: Applicative: Defer](tree: Tree): F[String] =
+  def go(subtree: Subtree): F[Chain[String]] =
     subtree match
       case Leaf(name) =>
-        Eval.now(name.foreach(sb ++= _))
+        Chain.fromOption(name).pure
       case Internal(branchSet, name) =>
-        Eval.later(sb += '(') *> branchSet.traverse_ {
-          case Branch(subtree, length) =>
-            go(subtree) *> Eval.later(length.foreach(sb ++= _.toString))
-        } *> Eval.later(sb += ')') *> Eval.later(name.foreach(sb ++= _))
+        Chain
+          .fromSeq(branchSet.toList)
+          .flatTraverse {
+            case Branch(subtree, length) =>
+              Defer[F].defer(go(subtree)).map(_ ++ Chain(":", length.toString))
+          }
+          .map("(" +: _ :+ ")")
 
-  go(tree.subtree).value
-  sb += ';'
-
-  sb.result()
+  go(tree.subtree).map(t => (t :+ ";").iterator.mkString)
