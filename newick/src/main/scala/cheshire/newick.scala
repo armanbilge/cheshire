@@ -33,6 +33,27 @@ final case class Leaf(name: Option[String]) extends Subtree
 final case class Internal(branchSet: NonEmptyList[Branch], name: Option[String]) extends Subtree
 final case class Branch(subtree: Subtree, length: Option[BigDecimal])
 
+def render[F[_]: Applicative: Defer](tree: Tree): F[String] =
+  def go(subtree: Subtree): F[Chain[String]] =
+    subtree match
+      case Leaf(name) =>
+        Chain.fromOption(name).pure
+      case Internal(branchSet, name) =>
+        Chain
+          .fromSeq(branchSet.toList)
+          .flatTraverse {
+            case Branch(subtree, length) =>
+              Defer[F].defer(go(subtree)).map(_ ++ Chain(":", length.toString))
+          }
+          .map("(" +: _ :+ ")")
+
+  go(tree.subtree).map(t => (t :+ ";").iterator.mkString)
+
+def parse(s: String): Either[Parser.Error, Tree] =
+  tree.parse(s).map(_._2)
+
+private val tree = Parser.start *> (subtree <* skip <* Parser.char(';').?).map(Tree(_)) <* Parser.end
+
 private val subtree: Parser0[Subtree] = leaf | internal
 
 private val internal =
@@ -59,19 +80,3 @@ private val length = Parser.char(':') *> Numbers.jsonNumber.map(BigDecimal(_))
 
 private val skip = (comment.void | Parser.charIn(" \t\n").rep.void).rep0.void
 private val comment = Parser.anyChar.between(Parser.char('['), Parser.char(']'))
-
-def render[F[_]: Applicative: Defer](tree: Tree): F[String] =
-  def go(subtree: Subtree): F[Chain[String]] =
-    subtree match
-      case Leaf(name) =>
-        Chain.fromOption(name).pure
-      case Internal(branchSet, name) =>
-        Chain
-          .fromSeq(branchSet.toList)
-          .flatTraverse {
-            case Branch(subtree, length) =>
-              Defer[F].defer(go(subtree)).map(_ ++ Chain(":", length.toString))
-          }
-          .map("(" +: _ :+ ")")
-
-  go(tree.subtree).map(t => (t :+ ";").iterator.mkString)
