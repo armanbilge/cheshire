@@ -16,14 +16,21 @@
 
 package cheshire.newick
 
+import cats.data.NonEmptyList
 import org.specs2.mutable.Specification
 
 class NewickSpec extends Specification:
 
   "Newick parser" should {
-    "parse wikipedia examples" in {
-      parse("(,,(,));") should beLike {
-        case x => ok
-      }
+    "parse ;" in {
+      parse(";") === Right(Tree(Leaf(None)))
+    }
+    "parse A;" in {
+      parse("A;") === Right(Tree(Leaf(Some("A"))))
+    }
+    "parse (A);" in {
+      subtree.parse("(A)") === Right(
+        Tree(Internal(NonEmptyList.one(Branch(Leaf(Some("A")), None)), None))
+      )
     }
   }

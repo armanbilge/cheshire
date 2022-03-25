@@ -52,7 +52,7 @@ def parse(s: String): Either[Parser.Error, Tree] =
   tree.parse(s).map(_._2)
 
 private val tree =
-  Parser.start *> (subtree <* skip <* Parser.char(';').?).map(Tree(_)) <* Parser.end
+  Parser.start *> (subtree <* skip <* Parser.char(';')).map(Tree(_)) <* Parser.end
 
 private def subtree: Parser0[Subtree] = leaf | internal
 
