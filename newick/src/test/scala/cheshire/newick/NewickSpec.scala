@@ -29,7 +29,7 @@ class NewickSpec extends Specification:
       parse("A;") === Right(Tree(Leaf(Some("A"))))
     }
     "parse (A);" in {
-      subtree.parse("(A)") === Right(
+      parse("(A);") === Right(
         Tree(Internal(NonEmptyList.one(Branch(Leaf(Some("A")), None)), None))
       )
     }

@@ -54,15 +54,16 @@ def parse(s: String): Either[Parser.Error, Tree] =
 private val tree =
   Parser.start *> (subtree <* skip <* Parser.char(';')).map(Tree(_)) <* Parser.end
 
-private def subtree: Parser0[Subtree] = leaf | internal
+private def subtree: Parser0[Subtree] = internal | leaf
 
 private def internal =
   (branchSet.surroundedBy(skip)
     .between(Parser.char('('), Parser.char(')')) ~ name.?).map(Internal(_, _))
 
 private def branchSet = Defer[Parser0].fix[NonEmptyList[Branch]] { recurse =>
-  (branch ~ (skip *> Parser.char(',') *> skip *> recurse)).map {
-    (branch, branchSet) => branchSet.append(branch)
+  (branch ~ (skip *> Parser.char(',') *> skip *> recurse).?).map {
+    case (branch, Some(branchSet)) => branchSet.append(branch)
+    case (branch, None) => NonEmptyList.one(branch)
   }
 }
 
