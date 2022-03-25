@@ -26,6 +26,7 @@ import cats.syntax.all.*
 import scala.collection.mutable
 import cats.parse.Numbers
 import cats.data.NonEmptyList
+import cats.Defer
 
 final case class Tree(subtree: Subtree)
 sealed abstract class Subtree
@@ -35,10 +36,15 @@ final case class Branch(subtree: Subtree, length: Option[BigDecimal])
 
 private val subtree: Parser0[Subtree] = leaf | internal
 
-private val internal = (branch
-  .repSep(Parser.char(',').surroundedBy(skip))
-  .surroundedBy(skip)
-  .between(Parser.char('('), Parser.char(')')) ~ name.?).map(Internal(_, _))
+private val internal =
+  (branchSet.surroundedBy(skip).between(Parser.char('('), Parser.char(')')) ~ name.?)
+    .map(Internal(_, _))
+
+private val branchSet = Defer[Parser0].fix[NonEmptyList[Branch]] { recurse =>
+  (branch ~ (skip *> Parser.char(',') *> skip *> recurse)).map { (branch, branchSet) =>
+    branchSet.append(branch)
+  }
+}
 
 private val branch = ((subtree <* skip) ~ length.?).map(Branch(_, _))
 
