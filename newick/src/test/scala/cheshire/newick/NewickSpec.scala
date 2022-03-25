@@ -33,4 +33,28 @@ class NewickSpec extends Specification:
         Tree(Internal(NonEmptyList.one(Branch(Leaf(Some("A")), None)), None))
       )
     }
+    "parse (,,(,));" in {
+      parse("(,,(,));") should beRight
+    }
+    "parse (A,B,(C,D));" in {
+      parse("(A,B,(C,D));") should beRight
+    }
+    "parse (A,B,(C,D)E)F;" in {
+      parse("(A,B,(C,D)E)F;") should beRight
+    }
+    "parse (:0.1,:0.2,(:0.3,:0.4):0.5);" in {
+      parse("(:0.1,:0.2,(:0.3,:0.4):0.5);") should beRight
+    }
+    "parse (:0.1,:0.2,(:0.3,:0.4):0.5):0.0;" in {
+      parse("(:0.1,:0.2,(:0.3,:0.4):0.5):0.0;") should beRight
+    }
+    "parse (A:0.1,B:0.2,(C:0.3,D:0.4):0.5);" in {
+      parse("(A:0.1,B:0.2,(C:0.3,D:0.4):0.5);") should beRight
+    }
+    "parse (A:0.1,B:0.2,(C:0.3,D:0.4)E:0.5)F;" in {
+      parse("(A:0.1,B:0.2,(C:0.3,D:0.4)E:0.5)F;") should beRight
+    }
+    "parse ((B:0.2,(C:0.3,D:0.4)E:0.5)F:0.1)A;" in {
+      parse("((B:0.2,(C:0.3,D:0.4)E:0.5)F:0.1)A;") should beRight
+    }
   }
