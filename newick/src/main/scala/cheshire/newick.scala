@@ -57,8 +57,8 @@ private val tree =
 private def subtree: Parser0[Subtree] = internal | leaf
 
 private def internal =
-  (branchSet.surroundedBy(skip)
-    .between(Parser.char('('), Parser.char(')')) ~ name.?).map(Internal(_, _))
+  (branchSet.surroundedBy(skip).between(Parser.char('('), Parser.char(')')) ~ name.?)
+    .map(Internal(_, _))
 
 private def branchSet = Defer[Parser0].fix[NonEmptyList[Branch]] { recurse =>
   (branch ~ (skip *> Parser.char(',') *> skip *> recurse).?).map {
