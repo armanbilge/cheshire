@@ -23,15 +23,13 @@ class NewickSpec extends Specification:
 
   "Newick parser" should {
     "parse ;" in {
-      parse(";") === Right(Tree(Leaf(None)))
+      parse(";") === Right(Tree(Node(Nil, None, None)))
     }
     "parse A;" in {
-      parse("A;") === Right(Tree(Leaf(Some("A"))))
+      parse("A;") === Right(Tree(Node(Nil, Some("A"), None)))
     }
     "parse (A);" in {
-      parse("(A);") === Right(
-        Tree(Internal(NonEmptyList.one(Branch(Leaf(Some("A")), None)), None))
-      )
+      parse("(A);") === Right(Tree(Node(List(Node(Nil, Some("A"), None)), None, None)))
     }
     "parse (,,(,));" in {
       parse("(,,(,));") should beRight
