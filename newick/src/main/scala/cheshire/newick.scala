@@ -47,36 +47,33 @@ def render[F[_]: Applicative: Defer](tree: Tree): F[String] =
 
   go(tree.root).map(t => (t :+ ";").iterator.mkString)
 
-// def parse(s: String): Either[Parser.Error, Tree] =
-//   tree.parse(s).map(_._2)
+def parse(s: String): Either[Parser.Error, Tree] =
+  tree.parse(s).map(_._2)
 
-// private val tree =
-//   Parser.start *> (subtree <* skip <* Parser.char(';')).map(Tree(_)) <* Parser.end
+private val tree =
+  Parser.start *> (node <* skip <* Parser.char(';')).map(Tree(_)) <* Parser.end
 
-// private def subtree: Parser0[Subtree] = internal | leaf
+private def node: Parser0[Node] =
+  (children.?.map(_.toList.flatMap(_.toList)), (skip *> label.?), (skip *> length.?))
+    .mapN(Node(_, _, _))
 
-// private def internal =
-//   (branchSet.surroundedBy(skip).between(Parser.char('('), Parser.char(')')) ~ name.?)
-//     .map(Internal(_, _))
+private def children = Defer[Parser0]
+  .fix[NonEmptyList[Node]] { go =>
+    (node ~ (skip *> Parser.char(',') *> skip *> go).?).map {
+      case (head, None) => NonEmptyList.one(head)
+      case (head, Some(tail)) => head :: tail
+    }
+  }
+  .surroundedBy(skip)
+  .between(Parser.char('('), Parser.char(')'))
 
-// private def branchSet = Defer[Parser0].fix[NonEmptyList[Branch]] { recurse =>
-//   (branch ~ (skip *> Parser.char(',') *> skip *> recurse).?).map {
-//     case (branch, Some(branchSet)) => branchSet.append(branch)
-//     case (branch, None) => NonEmptyList.one(branch)
-//   }
-// }
+private def label =
+  val unquoted =
+    Parser.charIn(('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9') ++ "#*%/.\\-+_&").repAs[String]
+  val quoted = (Rfc5234.vchar | Parser.charIn(' ')).repAs[String]
+  (unquoted | quoted.surroundedBy(Rfc5234.dquote) | quoted.surroundedBy(Parser.char('\'')))
 
-// private def branch = ((subtree <* skip) ~ length.?).map(Branch(_, _))
+private def length = Parser.char(':') *> skip *> Numbers.jsonNumber.map(BigDecimal(_))
 
-// private def leaf = name.?.map(Leaf(_))
-
-// private def name =
-//   val unquoted =
-//     Parser.charIn(('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9') ++ "#*%/.\\-+_&").repAs[String]
-//   val quoted = (Rfc5234.vchar | Parser.charIn(' ')).repAs[String]
-//   (unquoted | quoted.surroundedBy(Rfc5234.dquote) | quoted.surroundedBy(Parser.char('\'')))
-
-// private def length = Parser.char(':') *> Numbers.jsonNumber.map(BigDecimal(_))
-
-// private def skip = (comment.void | Parser.charIn(" \t\n").rep.void).rep0.void
-// private def comment = Parser.anyChar.between(Parser.char('['), Parser.char(']'))
+private def skip = (comment.void | Parser.charIn(" \t\n").rep.void).rep0.void
+private def comment = Parser.anyChar.between(Parser.char('['), Parser.char(']'))
