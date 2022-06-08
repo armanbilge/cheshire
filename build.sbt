@@ -15,7 +15,7 @@ val CatsVersion = "2.7.0"
 val CatsEffectVersion = "3.3.12"
 val DisciplineVersion = "1.5.1"
 val RefinedVersion = "0.9.29"
-val ScodecBitsVersion = "1.1.31"
+val ScodecBitsVersion = "1.1.34"
 val Specs2Version = "5.0.0"
 val DisciplineSpecs2Version = "2.0-44-19f6d7f"
 
