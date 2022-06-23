@@ -36,6 +36,9 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
       "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test
     )
   )
+  .jvmSettings(
+    fork := true
+  )
 
 lazy val likelihood = project
   .in(file("likelihood"))

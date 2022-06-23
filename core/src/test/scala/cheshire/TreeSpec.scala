@@ -37,19 +37,25 @@ import GenTree.*
 
 class GenTreeSpec extends Specification, Discipline, ScalaCheck:
 
-  // Even increasing maxSize = 3 seems to cause issues :(
-  given Parameters = Parameters(maxSize = 2)
+  val isJvm = sys.props("java.vm.name") match
+    case "Scala.js" => false
+    case _ => true
+
+  given Parameters = Parameters(
+    minTestsOk = if isJvm then 100 else 10,
+    maxSize = 3
+  )
 
   given [N: Gen, L: Gen]: Gen[GenTree[N, L]] = Gen.sized { size =>
-    if size <= 1 then summon[Gen[L]].flatMap(Leaf(_))
-    else
-      for
-        value <- summon[Gen[N]]
-        leftSize <- Gen.choose(0, size - 1)
-        left <- Gen.resize(leftSize, given_Gen_GenTree[N, L])
-        rightSize <- Gen.choose(0, size - 1)
-        right <- Gen.resize(rightSize, given_Gen_GenTree[N, L])
-      yield Node(value, left, right)
+    Gen.choose(1, size).flatMap {
+      case 1 => summon[Gen[L]].flatMap(Leaf(_))
+      case size =>
+        for
+          value <- summon[Gen[N]]
+          left <- Gen.resize(size - 1, given_Gen_GenTree[N, L])
+          right <- Gen.resize(size - 1, given_Gen_GenTree[N, L])
+        yield Node(value, left, right)
+    }
   }
 
   given [N: Cogen, L: Cogen]: Cogen[GenTree[N, L]] =
@@ -70,8 +76,11 @@ class GenTreeSpec extends Specification, Discipline, ScalaCheck:
 
     }
 
+  // Even increasing maxSize = 3 seems to cause issues :(
   given [N: Arbitrary, L: Arbitrary]: Arbitrary[GenTree[N, L]] =
-    Arbitrary(given_Gen_GenTree(using Arbitrary.arbitrary[N], Arbitrary.arbitrary[L]))
+    Arbitrary(
+      Gen.resize(2, given_Gen_GenTree(using Arbitrary.arbitrary[N], Arbitrary.arbitrary[L]))
+    )
 
   given [A](using arb: Arbitrary[Tree[A]]): Arbitrary[ZipTree[A]] =
     Arbitrary(arb.arbitrary.map(ZipTree(_)))
