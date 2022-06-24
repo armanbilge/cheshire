@@ -21,7 +21,7 @@ val DisciplineSpecs2Version = "2.0-44-19f6d7f"
 
 ThisBuild / scalacOptions ++= Seq("-new-syntax", "-indent", "-source:future")
 
-lazy val root = tlCrossRootProject.aggregate(core, likelihood, likelihoodLaws)
+lazy val root = tlCrossRootProject.aggregate(core, nucleotide, likelihood, likelihoodLaws)
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
@@ -38,6 +38,20 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   )
   .jvmSettings(
     fork := true
+  )
+
+lazy val nucleotide = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("nucleotide"))
+  .settings(
+    name := "cheshire-nucleotide",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-core" % CatsVersion,
+      "org.scodec" %%% "scodec-bits" % ScodecBitsVersion,
+      "org.typelevel" %%% "cats-laws" % CatsVersion % Test,
+      "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
+      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test
+    )
   )
 
 lazy val likelihood = project
