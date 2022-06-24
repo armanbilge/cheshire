@@ -14,8 +14,10 @@ ThisBuild / crossScalaVersions := Seq(Scala3)
 val CatsVersion = "2.8.0"
 val CatsEffectVersion = "3.3.12"
 val DisciplineVersion = "1.5.1"
+val Fs2Version = "3.2.8"
 val RefinedVersion = "0.9.29"
 val ScodecBitsVersion = "1.1.34"
+val VaultVersion = "3.2.1"
 val Specs2Version = "5.0.1"
 val DisciplineSpecs2Version = "2.0.0"
 
@@ -23,7 +25,7 @@ ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"))
 ThisBuild / tlJdkRelease := Some(8)
 ThisBuild / scalacOptions ++= Seq("-new-syntax", "-indent", "-source:future")
 
-lazy val root = tlCrossRootProject.aggregate(core, likelihood, likelihoodLaws)
+lazy val root = tlCrossRootProject.aggregate(core, treedb, likelihood, likelihoodLaws)
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
@@ -40,6 +42,22 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   )
   .jvmSettings(
     fork := true
+  )
+
+lazy val treedb = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("treedb"))
+  .settings(
+    name := "cheshire-treedb",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-core" % CatsVersion,
+      "org.typelevel" %%% "cats-effect" % CatsEffectVersion,
+      "co.fs2" %%% "fs2-core" % Fs2Version,
+      "org.typelevel" %%% "vault" % VaultVersion,
+      "org.typelevel" %%% "cats-laws" % CatsVersion % Test,
+      "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
+      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test
+    )
   )
 
 lazy val likelihood = project
