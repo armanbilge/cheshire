@@ -19,6 +19,8 @@ val ScodecBitsVersion = "1.1.34"
 val Specs2Version = "5.0.1"
 val DisciplineSpecs2Version = "2.0.0"
 
+ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"))
+ThisBuild / tlJdkRelease := Some(8)
 ThisBuild / scalacOptions ++= Seq("-new-syntax", "-indent", "-source:future")
 
 lazy val root = tlCrossRootProject.aggregate(core, likelihood, likelihoodLaws)
