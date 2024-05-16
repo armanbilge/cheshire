@@ -1,0 +1,20 @@
+native_amd64_task:
+  matrix:
+  - name: x86_64
+    compute_engine_instance:
+      image_project: ubuntu-os-cloud
+      image: ubuntu-2304-lunar-amd64-v20230530
+      platform: linux
+      architecture: amd64
+  - name: ARM
+    compute_engine_instance:
+      image_project: ubuntu-os-cloud
+      image: ubuntu-2304-lunar-arm64-v20230530
+      platform: linux
+      architecture: arm64
+  script:
+    - uname -a
+    - apt-get update && apt-get install -y build-essential clang default-jre
+    - git clone https://github.com/axboe/liburing.git && cd liburing && ./configure && make && sudo make install && cd ..
+    - wget -q https://github.com/sbt/sbt/releases/download/v1.10.0/sbt-1.10.0.zip && tar xvfz sbt-1.10.0.tgz
+    - sbt/bin/sbt test
