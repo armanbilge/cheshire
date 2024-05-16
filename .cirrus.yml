@@ -3,13 +3,13 @@ native_amd64_task:
   - name: x86_64
     compute_engine_instance:
       image_project: ubuntu-os-cloud
-      image: ubuntu-2404-lts-amd64
+      image: ubuntu-2404-noble-amd64-v20240423
       platform: linux
       architecture: amd64
   - name: ARM
     compute_engine_instance:
       image_project: ubuntu-os-cloud
-      image: ubuntu-2404-lts-arm64
+      image: ubuntu-2404-noble-arm64-v20240423
       platform: linux
       architecture: arm64
   script:
