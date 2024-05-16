@@ -16,5 +16,5 @@ native_amd64_task:
     - uname -a
     - apt-get update && apt-get install -y build-essential clang default-jre
     - git clone https://github.com/axboe/liburing.git && cd liburing && ./configure && make && sudo make install && cd ..
-    - wget -q https://github.com/sbt/sbt/releases/download/v1.10.0/sbt-1.10.0.zip && tar xvfz sbt-1.10.0.tgz
+    - wget -q https://github.com/sbt/sbt/releases/download/v1.10.0/sbt-1.10.0.tgz && tar xvfz sbt-1.10.0.tgz
     - sbt/bin/sbt test
