@@ -13,7 +13,7 @@ ThisBuild / githubWorkflowBuild ~= { steps =>
   steps.flatMap {
     case step: WorkflowStep.Sbt if step.commands == List("test") =>
       List(WorkflowStep.Sbt(List("Test/compile"), name = Some("Compile")))
-    case step                                                       => List(step)
+    case step => List(step)
   }
 }
 
