@@ -29,3 +29,4 @@ libraryDependencies += "com.github.sbt" % "junit-interface" % "0.13.3" % Test
 crossPaths := false
 autoScalaLibrary := false
 Compile / compileOrder := CompileOrder.JavaThenScala
+Compile / doc / javacOptions -= "-Xlint:all"
