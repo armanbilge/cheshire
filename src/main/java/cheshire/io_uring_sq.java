@@ -21,7 +21,7 @@ public final class io_uring_sq {
 	public static VarHandle kheadVarHandle = layout.varHandle(PathElement.groupElement("khead"));
 	public static VarHandle ktailVarHandle = layout.varHandle(PathElement.groupElement("ktail"));
 	public static VarHandle kringMaskVarHandle = layout.varHandle(PathElement.groupElement("kring_mask"));
-	public static VarHandle kringEntrieskVarHandle = layout.varHandle(PathElement.groupElement("kring_entries"));
+	public static VarHandle kringEntriesVarHandle = layout.varHandle(PathElement.groupElement("kring_entries"));
 	public static VarHandle kflagsVarHandle = layout.varHandle(PathElement.groupElement("kflags"));
 	public static VarHandle kdroppedVarHandle = layout.varHandle(PathElement.groupElement("kdropped"));
 	public static VarHandle arrayVarHandle = layout.varHandle(PathElement.groupElement("array"));

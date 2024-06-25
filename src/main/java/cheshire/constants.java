@@ -25,6 +25,9 @@ public final class constants {
 	public static final int IORING_OP_SHUTDOWN = 34;
 	public static final int IORING_OP_SOCKET = 45;
 
+	public static final int IORING_UNREGISTER_RING_FDS = 21;
+	public static final int IORING_REGISTER_USE_REGISTERED_RING = 1 << 31;
+
 	public static final long IORING_OFF_SQ_RING = 0L;
 	public static final long IORING_OFF_CQ_RING = 0x8000000L;
 	public static final long IORING_OFF_SQES = 0x10000000L;
@@ -43,7 +46,8 @@ public final class constants {
 	public static final int KERN_MAX_ENTRIES = 32768;
 	public static final int KERN_MAX_CQ_ENTRIES = (2 * KERN_MAX_ENTRIES);
 
-	public static final int __NR_io_uring_setup = 535; // or (__NR_Linux + 425) or 425 or
+	public static final int __NR_io_uring_setup = 535; // or (__NR_Linux + 425) or 425
+	public static final int __NR_io_uring_register = 537; // or (__NR_Linux + 427) or 427
 
 	// TODO: Review
 	public static final int ENOMEM = 5;

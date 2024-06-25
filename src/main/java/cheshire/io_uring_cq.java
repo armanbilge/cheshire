@@ -18,7 +18,7 @@ public final class io_uring_cq {
 	public static VarHandle kheadVarHandle = layout.varHandle(PathElement.groupElement("khead"));
 	public static VarHandle ktailVarHandle = layout.varHandle(PathElement.groupElement("ktail"));
 	public static VarHandle kringMaskVarHandle = layout.varHandle(PathElement.groupElement("kring_mask"));
-	public static VarHandle kringEntrieskVarHandle = layout.varHandle(PathElement.groupElement("kring_entries"));
+	public static VarHandle kringEntriesVarHandle = layout.varHandle(PathElement.groupElement("kring_entries"));
 	public static VarHandle kflagsVarHandle = layout.varHandle(PathElement.groupElement("kflags"));
 	public static VarHandle koverflowVarHandle = layout.varHandle(PathElement.groupElement("koverflow"));
 	public static VarHandle cqesVarHandle = layout.varHandle(PathElement.groupElement("cqes"));

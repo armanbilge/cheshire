@@ -16,20 +16,20 @@
 
 package cheshire;
 
-import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 
 /** mirrors liburing's C API */
 public final class liburing {
-	public static int io_uring_queue_init(int entries, MemorySegment ring, int flags) {
-		try (Arena memorySession = Arena.ofConfined()) {
-			MemorySegment p = memorySession.allocate(io_uring_params.layout);
-			p.fill((byte) 0);
-			io_uring_params.flagsVarHandle.set(p, flags);
-			return setup.io_uring_queue_init_params(entries, ring, p);
-		}
+	public static int io_uring_queue_init(int entries, MemorySegment ring, int flags, io_uring_params p) {
+		p.segment.fill((byte) 0);
+		io_uring_params.flagsVarHandle.set(p, flags);
+		return setup.io_uring_queue_init_params(entries, ring, p.segment, p.sqEntriesSegment, p.cqEntriesSegment);
 	};
-	// public static void io_uring_queue_exit(MemorySegment ring);
+
+	public static void io_uring_queue_exit(MemorySegment ring, io_uring_rsrc_update up) {
+		setup.io_uring_queue_exit(ring, up.segment);
+	}
+
 	// public static MemorySegment io_uring_get_sqe(MemorySegment ring);
 	// public static int io_uring_submit(MemorySegment ring);
 	// public static int io_uring_submit_and_wait_timeout(
