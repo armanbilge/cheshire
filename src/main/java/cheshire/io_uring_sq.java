@@ -34,6 +34,18 @@ public final class io_uring_sq {
 	private static VarHandle ringMaskVarHandle = layout.varHandle(PathElement.groupElement("ring_mask"));
 	private static VarHandle ringEntriesVarHandle = layout.varHandle(PathElement.groupElement("ring_entries"));
 
+	public static MemorySegment getSqesSegment(MemorySegment data) {
+		return MemorySegment.ofAddress(getSqes(data));
+	}
+
+	public static MemorySegment getRingPtrSegment(MemorySegment data) {
+		return MemorySegment.ofAddress(getRingPtr(data));
+	}
+
+	public static MemorySegment getSqArraySegment(MemorySegment data) {
+		return MemorySegment.ofAddress(getArray(data));
+	}
+
 	public static long getKhead(MemorySegment data) {
 		return (long) kheadVarHandle.get(data);
 	}

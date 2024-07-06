@@ -37,8 +37,7 @@ public final class liburing {
 			MemorySegment cqe) {
 		int err = 0;
 		int available;
-		MemorySegment cq = ring.segment.asSlice(io_uring.layout.byteOffset(PathElement.groupElement("cq")),
-				io_uring_cq.layout);
+		MemorySegment cq = io_uring.getCqSegment(ring.segment);
 		int mask = io_uring_cq.getRingMask(cq);
 		int shift = 0;
 
@@ -50,20 +49,16 @@ public final class liburing {
 		do {
 			// unsigned tail = io_uring_smp_load_acquire(ring->cq.ktail);
 			// unsigned head = *ring->cq.khead;
-			int tail = (int) io_uring_cq.getAcquireKtail(
-					ring.segment.asSlice(io_uring.layout.byteOffset(PathElement.groupElement("cq")), io_uring_cq.layout));
-			int head = (int) io_uring_cq.getKhead(
-					ring.segment.asSlice(io_uring.layout.byteOffset(PathElement.groupElement("cq")), io_uring_cq.layout));
+			int tail = (int) io_uring_cq.getAcquireKtail(io_uring.getCqSegment(ring.segment));
+			int head = (int) io_uring_cq.getKhead(io_uring.getCqSegment(ring.segment));
 			// TODO: Review nulls
 			cqe = MemorySegment.NULL;
 			available = tail - head;
 			if (available == 0) {
 				break;
 			}
-			MemorySegment cq2 = ring.segment.asSlice(io_uring.layout.byteOffset(PathElement.groupElement("cq")),
-					io_uring_cq.layout);
-			MemorySegment cqes = cq2.asSlice(io_uring_cq.layout.byteOffset(PathElement.groupElement("cqes")),
-					ValueLayout.ADDRESS);
+			MemorySegment cq2 = io_uring.getCqSegment(ring.segment);
+			MemorySegment cqes = io_uring_cq.getCqesSegment(cq2);
 			cqe.copyFrom(
 					cqes.asSlice(((head & mask) << shift) * io_uring_sqe.layout.byteSize(), io_uring_sqe.layout.byteSize()));
 
@@ -100,8 +95,8 @@ public final class liburing {
 	};
 
 	public static MemorySegment io_uring_get_sqe(io_uring ring, io_uring_sqe sqe) {
-		MemorySegment sq = ring.segment.asSlice(io_uring.layout.byteOffset(PathElement.groupElement("sq")),
-				io_uring_sq.layout);
+		MemorySegment sq = io_uring.getSqSegment(ring.segment);
+
 		int head;
 		int next = io_uring_sq.getSqeTail(sq) + 1;
 		int shift = 0;
@@ -112,14 +107,8 @@ public final class liburing {
 		}
 		if ((flags & constants.IORING_SETUP_SQPOLL) == 0) {
 			// head = *sq->khead;
-			// head =
-			// MemorySegment.ofAddress(io_uring_sq.getKhead(sq)).get(ValueLayout.JAVA_INT,
-			// 0); // TODO: Get content?
-			head = (int) io_uring_sq.getKhead(sq);
+			head = (int) io_uring_sq.getKhead(sq); // TODO: Get content?
 		} else {
-			// MemorySegment khead =
-			// sq.asSlice(io_uring_sq.layout.byteOffset(PathElement.groupElement("khead")),
-			// ValueLayout.ADDRESS);
 			// head = io_uring_smp_load_acquire(khead);
 			head = (int) io_uring_sq.getAcquireKhead(sq);
 		}
@@ -127,8 +116,8 @@ public final class liburing {
 		int ring_entries = io_uring_sq.getRingEntries(sq);
 		if ((next - head) <= ring_entries) {
 			// TODO: Review logic
-			MemorySegment sqes = sq.asSlice(io_uring_sq.layout.byteOffset(PathElement.groupElement("sqes")),
-					ValueLayout.ADDRESS);
+			// sqe = &sq->sqes[(sq->sqe_tail & sq->ring_mask) << shift];
+			MemorySegment sqes = io_uring_sq.getSqesSegment(sq);
 			int sqe_tail = io_uring_sq.getSqeTail(sq);
 			int ring_mask = io_uring_sq.getRingMask(sq);
 			int index = (sqe_tail & ring_mask) << shift;
@@ -167,15 +156,13 @@ public final class liburing {
 
 	public static void io_uring_cq_advance(io_uring ring, int nr) {
 		if (nr != 0) {
-			MemorySegment cq = ring.segment.asSlice(io_uring.layout.byteOffset(PathElement.groupElement("cq")),
-					io_uring_cq.layout);
+			MemorySegment cq = io_uring.getCqSegment(ring.segment);
 			io_uring_cq.setReleaseKhead(cq, io_uring_cq.getKhead(cq) + nr);
 		}
 	};
 
 	public static int io_uring_cq_ready(io_uring ring) {
-		MemorySegment cq = ring.segment.asSlice(io_uring.layout.byteOffset(PathElement.groupElement("cq")),
-				io_uring_cq.layout);
+		MemorySegment cq = io_uring.getCqSegment(ring.segment);
 		return (int) (io_uring_cq.getAcquireKtail(cq) - io_uring_cq.getKhead(cq));
 
 	};

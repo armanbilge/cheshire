@@ -19,7 +19,7 @@ class queue {
 		// io_uring_smp_mb(); // TODO: Review
 		// std::atomic_thread_fence(std::memory_order_seq_cst);
 
-		MemorySegment sq = ring.asSlice(io_uring.layout.byteOffset(PathElement.groupElement("sq")), io_uring_sq.layout);
+		MemorySegment sq = io_uring.getSqSegment(ring);
 		// TODO: Review inside if -> uring_unlikely(IO_URING_READ_ONCE(kflags)
 		long kflags = io_uring_sq.getAcquireKflags(sq);
 		if ((kflags & constants.IORING_SQ_NEED_WAKEUP) != 0) {
@@ -137,7 +137,7 @@ class queue {
 	}
 
 	private static int __io_uring_flush_sq(MemorySegment ring) {
-		MemorySegment sq = ring.asSlice(io_uring.layout.byteOffset(PathElement.groupElement("sq")), io_uring_sq.layout);
+		MemorySegment sq = io_uring.getSqSegment(ring);
 		int tail = io_uring_sq.getSqeTail(sq);
 		int head = io_uring_sq.getSqeHead(sq);
 		if (head != tail) {
@@ -157,7 +157,7 @@ class queue {
 	};
 
 	private static boolean cq_ring_needs_flush(MemorySegment ring) {
-		MemorySegment sq = ring.asSlice(io_uring.layout.byteOffset(PathElement.groupElement("sq")), io_uring_sq.layout);
+		MemorySegment sq = io_uring.getSqSegment(ring);
 		// IO_URING_READ_ONCE(*ring->sq.kflags) // TODO: std::memory_order_relaxed
 		// TODO: Get content or address
 		long kflags = io_uring_sq.getAcquireKflags(sq);
@@ -302,8 +302,7 @@ class queue {
 		while (true) { // TODO: Review logic
 			ready = liburing.io_uring_cq_ready(ring);
 			if (ready != 0) {
-				MemorySegment cq = ring.segment.asSlice(io_uring.layout.byteOffset(PathElement.groupElement("cq")),
-						io_uring_cq.layout);
+				MemorySegment cq = io_uring.getCqSegment(ring.segment);
 				// unsigned head = *ring->cq.khead;
 				int head = MemorySegment.ofAddress(io_uring_cq.getKhead(cq)).get(ValueLayout.JAVA_INT, 0); // TODO: Get content?
 				int mask = io_uring_cq.getRingMask(cq);

@@ -36,6 +36,16 @@ public final class io_uring_params {
 	private static VarHandle flagsVarHandle = layout.varHandle(PathElement.groupElement("flags"));
 	private static VarHandle featuresVarHandle = layout.varHandle(PathElement.groupElement("features"));
 
+	public static MemorySegment getSqOffSegment(MemorySegment data) {
+		return data.asSlice(io_uring_params.layout.byteOffset(PathElement.groupElement("sq_off")),
+				io_sqring_offsets.layout);
+	}
+
+	public static MemorySegment getCqOffSegment(MemorySegment data) {
+		return data.asSlice(io_uring_params.layout.byteOffset(PathElement.groupElement("cq_off")),
+				io_cqring_offsets.layout);
+	}
+
 	public static int getSqEntries(MemorySegment data) {
 		return (int) sqEntriesVarHandle.get(data);
 	}

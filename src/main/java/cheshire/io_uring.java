@@ -31,6 +31,14 @@ public final class io_uring {
 	private static VarHandle enterRingFdVarHandle = layout.varHandle(PathElement.groupElement("enter_ring_fd"));
 	private static VarHandle intFlagsVarHandle = layout.varHandle(PathElement.groupElement("int_flags"));
 
+	public static MemorySegment getSqSegment(MemorySegment data) {
+		return data.asSlice(io_uring.layout.byteOffset(PathElement.groupElement("sq")), io_uring_sq.layout);
+	}
+
+	public static MemorySegment getCqSegment(MemorySegment data) {
+		return data.asSlice(io_uring.layout.byteOffset(PathElement.groupElement("cq")), io_uring_cq.layout);
+	}
+
 	public static int getFlags(MemorySegment data) {
 		return (int) flagsVarHandle.get(data);
 	}
