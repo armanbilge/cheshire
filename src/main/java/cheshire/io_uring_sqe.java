@@ -1,12 +1,20 @@
 package cheshire;
 
+import java.lang.foreign.Arena;
 import java.lang.foreign.GroupLayout;
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemoryLayout.PathElement;
+import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.lang.invoke.VarHandle;
 
 public final class io_uring_sqe {
+	MemorySegment segment;
+
+	public io_uring_sqe(Arena session) {
+		this.segment = session.allocate(layout);
+	}
+
 	public static final GroupLayout layout = MemoryLayout
 			.structLayout(ValueLayout.JAVA_CHAR.withName("opcode"), ValueLayout.JAVA_CHAR.withName("flags"),
 					ValueLayout.JAVA_SHORT.withName("ioprio"), ValueLayout.JAVA_INT.withName("fd"),
@@ -56,17 +64,166 @@ public final class io_uring_sqe {
 							.withName("$anon$96:2"))
 			.withName("io_uring_sqe");
 
-	public static VarHandle opcodeVarHandle = layout.varHandle(PathElement.groupElement("opcode"));
-	public static VarHandle flagsVarHandle = layout.varHandle(PathElement.groupElement("flags"));
-	public static VarHandle ioprioVarHandle = layout.varHandle(PathElement.groupElement("ioprio"));
-	public static VarHandle fdVarHandle = layout.varHandle(PathElement.groupElement("fd"));
-	public static VarHandle offVarHandle = layout.varHandle(PathElement.groupElement("off"));
-	public static VarHandle addrVarHandle = layout.varHandle(PathElement.groupElement("addr"));
-	public static VarHandle lenVarHandle = layout.varHandle(PathElement.groupElement("len"));
-	public static VarHandle rwFlagsVarHandle = layout.varHandle(PathElement.groupElement("rw_flags"));
-	public static VarHandle pad2VarHandle = layout.varHandle(PathElement.groupElement("__pad2"));
-	public static VarHandle acceptFlagsVarHandle = layout.varHandle(PathElement.groupElement("accept_flags"));
-	public static VarHandle cancelFlagsVarHandle = layout.varHandle(PathElement.groupElement("cancel_flags"));
-	public static VarHandle msgFlagsVarHandle = layout.varHandle(PathElement.groupElement("msg_flags"));
-	public static VarHandle userDataVarHandle = layout.varHandle(PathElement.groupElement("user_data"));
+	private static VarHandle opcodeVarHandle = layout.varHandle(PathElement.groupElement("opcode"));
+	private static VarHandle flagsVarHandle = layout.varHandle(PathElement.groupElement("flags"));
+	private static VarHandle ioprioVarHandle = layout.varHandle(PathElement.groupElement("ioprio"));
+	private static VarHandle fdVarHandle = layout.varHandle(PathElement.groupElement("fd"));
+	private static VarHandle offVarHandle = layout.varHandle(PathElement.groupElement("off"));
+	private static VarHandle addrVarHandle = layout.varHandle(PathElement.groupElement("addr"));
+	private static VarHandle lenVarHandle = layout.varHandle(PathElement.groupElement("len"));
+	private static VarHandle rwFlagsVarHandle = layout.varHandle(PathElement.groupElement("rw_flags"));
+	private static VarHandle msgFlagsVarHandle = layout.varHandle(PathElement.groupElement("msg_flags"));
+	private static VarHandle timeoutFlagsVarHandle = layout.varHandle(PathElement.groupElement("timeout_flags"));
+	private static VarHandle acceptFlagsVarHandle = layout.varHandle(PathElement.groupElement("accept_flags"));
+	private static VarHandle cancelFlagsVarHandle = layout.varHandle(PathElement.groupElement("cancel_flags"));
+	private static VarHandle userDataVarHandle = layout.varHandle(PathElement.groupElement("user_data"));
+	private static VarHandle bufIndexVarHandle = layout.varHandle(PathElement.groupElement("buf_index"));
+	private static VarHandle personalityVarHandle = layout.varHandle(PathElement.groupElement("personality"));
+	private static VarHandle fileIndexVarHandle = layout.varHandle(PathElement.groupElement("file_index"));
+	private static VarHandle addr3VarHandle = layout.varHandle(PathElement.groupElement("addr3"));
+	private static VarHandle pad2VarHandle = layout.varHandle(PathElement.groupElement("__pad2"));
+
+	public static char getOpcode(MemorySegment data) {
+		return (char) opcodeVarHandle.get(data);
+	}
+
+	public static char getFlags(MemorySegment data) {
+		return (char) flagsVarHandle.get(data);
+	}
+
+	public static short getIoprio(MemorySegment data) {
+		return (short) ioprioVarHandle.get(data);
+	}
+
+	public static int getFd(MemorySegment data) {
+		return (int) fdVarHandle.get(data);
+	}
+
+	public static long getOff(MemorySegment data) {
+		return (long) offVarHandle.get(data);
+	}
+
+	public static long getAddr(MemorySegment data) {
+		return (long) addrVarHandle.get(data);
+	}
+
+	public static int getLen(MemorySegment data) {
+		return (int) lenVarHandle.get(data);
+	}
+
+	public static int getRwFlags(MemorySegment data) {
+		return (int) rwFlagsVarHandle.get(data);
+	}
+
+	public static int getTimeoutFlags(MemorySegment data) {
+		return (int) timeoutFlagsVarHandle.get(data);
+	}
+
+	public static int getMsgFlags(MemorySegment data) {
+		return (int) msgFlagsVarHandle.get(data);
+	}
+
+	public static int getAcceptFlags(MemorySegment data) {
+		return (int) acceptFlagsVarHandle.get(data);
+	}
+
+	public static int getCancelFlags(MemorySegment data) {
+		return (int) cancelFlagsVarHandle.get(data);
+	}
+
+	public static long getUserData(MemorySegment data) {
+		return (long) userDataVarHandle.get(data);
+	}
+
+	public static short getBufIndex(MemorySegment data) {
+		return (short) bufIndexVarHandle.get(data);
+	}
+
+	public static short getPersonality(MemorySegment data) {
+		return (short) personalityVarHandle.get(data);
+	}
+
+	public static int getFileIndex(MemorySegment data) {
+		return (int) fileIndexVarHandle.get(data);
+	}
+
+	public static long getAddr3(MemorySegment data) {
+		return (long) addr3VarHandle.get(data);
+	}
+
+	public static long getPad2(MemorySegment data) {
+		return (long) pad2VarHandle.get(data);
+	}
+
+	public static void setOpcode(MemorySegment data, char value) {
+		opcodeVarHandle.set(data, value);
+	}
+
+	public static void setFlags(MemorySegment data, char value) {
+		flagsVarHandle.set(data, value);
+	}
+
+	public static void setIoprio(MemorySegment data, short value) {
+		ioprioVarHandle.set(data, value);
+	}
+
+	public static void setFd(MemorySegment data, int value) {
+		fdVarHandle.set(data, value);
+	}
+
+	public static void setOff(MemorySegment data, long value) {
+		offVarHandle.set(data, value);
+	}
+
+	public static void setAddr(MemorySegment data, long value) {
+		addrVarHandle.set(data, value);
+	}
+
+	public static void setLen(MemorySegment data, int value) {
+		lenVarHandle.set(data, value);
+	}
+
+	public static void setRwFlags(MemorySegment data, int value) {
+		rwFlagsVarHandle.set(data, value);
+	}
+
+	public static void setTimeoutFlags(MemorySegment data, int value) {
+		timeoutFlagsVarHandle.set(data, value);
+	}
+
+	public static void setMsgFlags(MemorySegment data, int value) {
+		msgFlagsVarHandle.set(data, value);
+	}
+
+	public static void setAcceptFlags(MemorySegment data, int value) {
+		acceptFlagsVarHandle.set(data, value);
+	}
+
+	public static void setCancelFlags(MemorySegment data, int value) {
+		cancelFlagsVarHandle.set(data, value);
+	}
+
+	public static void setUserData(MemorySegment data, long value) {
+		userDataVarHandle.set(data, value);
+	}
+
+	public static void setBufIndex(MemorySegment data, short value) {
+		bufIndexVarHandle.set(data, value);
+	}
+
+	public static void setPersonality(MemorySegment data, short value) {
+		personalityVarHandle.set(data, value);
+	}
+
+	public static void setFileIndex(MemorySegment data, int value) {
+		fileIndexVarHandle.set(data, value);
+	}
+
+	public static void setAddr3(MemorySegment data, long value) {
+		addr3VarHandle.set(data, value);
+	}
+
+	public static void setPad2(MemorySegment data, long value) {
+		pad2VarHandle.set(data, value);
+	}
 }

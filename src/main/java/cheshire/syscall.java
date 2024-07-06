@@ -42,6 +42,29 @@ class syscall {
 		}
 	}
 
+	public static int __sys_io_uring_enter2(int fd, int to_submit, int min_complete, int flags, MemorySegment sig,
+			long sz) {
+		try {
+			MethodHandle syscallHandle = linker.downcallHandle(
+					linker.defaultLookup().find("syscall").orElseThrow(),
+					FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+							ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG));
+			int ret = (int) syscallHandle.invokeExact(constants.__NR_io_uring_enter, fd, to_submit, min_complete, flags, sig,
+					sz);
+			if (ret < 0) {
+				throw new RuntimeException("close syscall failed");
+			}
+			return ret;
+		} catch (Throwable e) {
+			return e.hashCode();
+			// TODO: return -errno;
+		}
+	}
+
+	public static int __sys_io_uring_enter(int fd, int to_submit, int min_complete, int flags, MemorySegment sig) {
+		return __sys_io_uring_enter2(fd, to_submit, min_complete, flags, sig, constants._NSIG / 8);
+	}
+
 	public static int __sys_close(int fd) {
 		try {
 			MethodHandle syscallHandle = linker.downcallHandle(

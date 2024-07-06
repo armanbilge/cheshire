@@ -12,7 +12,7 @@ public final class io_uring_rsrc_update {
 	MemorySegment segment;
 
 	public io_uring_rsrc_update(Arena session) {
-		this.segment = session.allocate(io_uring_rsrc_update.layout);
+		this.segment = session.allocate(layout);
 	}
 
 	public static final GroupLayout layout = MemoryLayout.structLayout(
@@ -20,5 +20,14 @@ public final class io_uring_rsrc_update {
 			ValueLayout.JAVA_INT.withName("resv"),
 			ValueLayout.JAVA_LONG.withName("data")).withName("io_uring_rsrc_update");
 
-	public static VarHandle offsetVarHandle = layout.varHandle(PathElement.groupElement("offset"));
+	private static VarHandle offsetVarHandle = layout.varHandle(PathElement.groupElement("offset"));
+
+	public static int getOffset(MemorySegment data) {
+		return (int) offsetVarHandle.get(data);
+	}
+
+	public static void setOffset(MemorySegment data, int value) {
+		offsetVarHandle.set(data, value);
+	}
+
 }
