@@ -16,7 +16,6 @@
 
 package cheshire;
 
-import java.lang.foreign.MemoryLayout.PathElement;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 
@@ -51,7 +50,6 @@ public final class liburing {
 			// unsigned head = *ring->cq.khead;
 			int tail = (int) io_uring_cq.getAcquireKtail(io_uring.getCqSegment(ring.segment));
 			int head = (int) io_uring_cq.getKhead(io_uring.getCqSegment(ring.segment));
-			// TODO: Review nulls
 			cqe = MemorySegment.NULL;
 			available = tail - head;
 			if (available == 0) {
@@ -78,7 +76,7 @@ public final class liburing {
 		} while (true);
 
 		cqe_ptr.copyFrom(cqe);
-		if (nr_available != null) {
+		if (nr_available != MemorySegment.NULL) {
 			nr_available.set(ValueLayout.JAVA_INT, 0L, available);
 		}
 		return err;
@@ -107,7 +105,7 @@ public final class liburing {
 		}
 		if ((flags & constants.IORING_SETUP_SQPOLL) == 0) {
 			// head = *sq->khead;
-			head = (int) io_uring_sq.getKhead(sq); // TODO: Get content?
+			head = (int) io_uring_sq.getKhead(sq);
 		} else {
 			// head = io_uring_smp_load_acquire(khead);
 			head = (int) io_uring_sq.getAcquireKhead(sq);
@@ -127,7 +125,7 @@ public final class liburing {
 			return sqe.segment;
 		}
 
-		return null;
+		return MemorySegment.NULL;
 	};
 
 	public static int io_uring_submit(io_uring ring) {
@@ -143,8 +141,8 @@ public final class liburing {
 
 	public static int io_uring_wait_cqe_timeout(io_uring ring, MemorySegment cqe_ptr, MemorySegment ts,
 			io_uring_getevents_arg arg, get_data data, io_uring_sqe sqe, io_uring_cqe cqe) {
-		return queue.io_uring_wait_cqes(ring, cqe_ptr, 1, ts, null, sqe, arg.segment, data.segment, cqe.segment,
-				cqe.nr_avaliable, cqe.flags);
+		return queue.io_uring_wait_cqes(ring, cqe_ptr, 1, ts, MemorySegment.NULL, sqe, arg.segment, data.segment,
+				cqe.segment, cqe.nr_avaliable, cqe.flags);
 	};
 
 	public static int io_uring_peek_batch_cqe(
@@ -167,7 +165,6 @@ public final class liburing {
 
 	};
 
-	// Prep methods
 	public static void io_uring_prep_rw(int op, io_uring_sqe sqe, int fd, MemorySegment addr, int len, long offset) {
 		io_uring_sqe.setOpcode(sqe.segment, (char) op);
 		io_uring_sqe.setFlags(sqe.segment, (char) 0);
@@ -181,7 +178,7 @@ public final class liburing {
 	};
 
 	public static void io_uring_prep_nop(io_uring_sqe sqe) {
-		io_uring_prep_rw(constants.IORING_OP_NOP, sqe, -1, null, 0, 0);
+		io_uring_prep_rw(constants.IORING_OP_NOP, sqe, -1, MemorySegment.NULL, 0, 0);
 	};
 
 	public static void io_uring_prep_accept(io_uring_sqe sqe, int fd, MemorySegment addr, MemorySegment addrlen,
@@ -191,13 +188,13 @@ public final class liburing {
 	};
 
 	public static void io_uring_prep_cancel64(io_uring_sqe sqe, long userData, int flags) {
-		io_uring_prep_rw(constants.IORING_OP_ASYNC_CANCEL, sqe, -1, null, 0, 0);
+		io_uring_prep_rw(constants.IORING_OP_ASYNC_CANCEL, sqe, -1, MemorySegment.NULL, 0, 0);
 		io_uring_sqe.setAddr(sqe.segment, userData);
 		io_uring_sqe.setCancelFlags(sqe.segment, flags);
 	};
 
 	public static void io_uring_prep_close(io_uring_sqe sqe, int fd) {
-		io_uring_prep_rw(constants.IORING_OP_CLOSE, sqe, fd, null, 0, 0);
+		io_uring_prep_rw(constants.IORING_OP_CLOSE, sqe, fd, MemorySegment.NULL, 0, 0);
 	};
 
 	public static void io_uring_prep_connect(io_uring_sqe sqe, int fd, MemorySegment addr, int addrlen) {
@@ -223,11 +220,11 @@ public final class liburing {
 	};
 
 	public static void io_uring_prep_shutdown(io_uring_sqe sqe, int fd, int how) {
-		io_uring_prep_rw(constants.IORING_OP_SHUTDOWN, sqe, fd, null, how, 0);
+		io_uring_prep_rw(constants.IORING_OP_SHUTDOWN, sqe, fd, MemorySegment.NULL, how, 0);
 	};
 
 	public static void io_uring_prep_socket(io_uring_sqe sqe, int domain, int type, int protocol, int flags) {
-		io_uring_prep_rw(constants.IORING_OP_SOCKET, sqe, domain, null, protocol, type);
+		io_uring_prep_rw(constants.IORING_OP_SOCKET, sqe, domain, MemorySegment.NULL, protocol, type);
 		io_uring_sqe.setRwFlags(sqe.segment, flags);
 	};
 

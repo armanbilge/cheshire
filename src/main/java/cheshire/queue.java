@@ -1,6 +1,5 @@
 package cheshire;
 
-import java.lang.foreign.MemoryLayout.PathElement;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 
@@ -53,7 +52,7 @@ class queue {
 				}
 				break;
 			}
-			if (cqe == null && wait_nr == 0 && submit == 0) {
+			if (cqe == MemorySegment.NULL && wait_nr == 0 && submit == 0) {
 				if (looped || !cq_ring_needs_enter(ring.segment)) {
 					if (err == 0) {
 						err = -constants.EAGAIN;
@@ -77,7 +76,7 @@ class queue {
 			if (looped && has_ts) {
 				// TODO: Review
 				// struct io_uring_getevents_arg *arg = data->arg;
-				if (cqe == null && arg != MemorySegment.NULL && err == 0) {
+				if (cqe == MemorySegment.NULL && arg != MemorySegment.NULL && err == 0) {
 					err = -constants.ETIME;
 				}
 				break;
@@ -98,9 +97,8 @@ class queue {
 			}
 
 			get_data.setSubmit(data, get_data.getSubmit(data) - ret);
-			// TODO check if it would be better to use isLoaded || isMapped from
-			// MemorySegment
-			if (cqe != null) {
+			// TODO check if better to use isLoaded || isMapped from MemorySegment
+			if (cqe != MemorySegment.NULL) {
 				break;
 			}
 			if (!looped) {
@@ -133,7 +131,7 @@ class queue {
 		}
 		int enter_ring_fd = io_uring.getEnterRingFd(ring);
 
-		return syscall.__sys_io_uring_enter(enter_ring_fd, 0, 0, flags, null);
+		return syscall.__sys_io_uring_enter(enter_ring_fd, 0, 0, flags, MemorySegment.NULL);
 	}
 
 	private static int __io_uring_flush_sq(MemorySegment ring) {
@@ -159,7 +157,6 @@ class queue {
 	private static boolean cq_ring_needs_flush(MemorySegment ring) {
 		MemorySegment sq = io_uring.getSqSegment(ring);
 		// IO_URING_READ_ONCE(*ring->sq.kflags) // TODO: std::memory_order_relaxed
-		// TODO: Get content or address
 		long kflags = io_uring_sq.getAcquireKflags(sq);
 		return ((kflags & (constants.IORING_SQ_CQ_OVERFLOW | constants.IORING_SQ_TASKRUN)) != 0);
 	};
@@ -193,13 +190,13 @@ class queue {
 		int ret;
 		// TODO: Review allocation logic of sqe
 		MemorySegment resSqe = liburing.io_uring_get_sqe(ring, sqe);
-		if (resSqe == null) {
+		if (resSqe == MemorySegment.NULL) {
 			ret = liburing.io_uring_submit(ring);
 			if (ret < 0) {
 				return ret;
 			}
 			resSqe = liburing.io_uring_get_sqe(ring, sqe);
-			if (resSqe == null) {
+			if (resSqe == MemorySegment.NULL) {
 				return -constants.EAGAIN;
 			}
 		}
@@ -227,7 +224,7 @@ class queue {
 
 			int enter_ring_fd = io_uring.getEnterRingFd(ring);
 			ret = syscall.__sys_io_uring_enter(enter_ring_fd, submitted, wait_nr, (int) flags.get(ValueLayout.JAVA_INT, 0L),
-					null);
+					MemorySegment.NULL);
 		} else {
 			ret = submitted;
 		}
@@ -238,7 +235,7 @@ class queue {
 			MemorySegment ts, MemorySegment sigmask, MemorySegment arg, MemorySegment data, io_uring_sqe sqe,
 			MemorySegment cqe, MemorySegment nr_available, MemorySegment flags) {
 		int to_submit;
-		if (ts != null) {
+		if (ts != MemorySegment.NULL) {
 			int features = io_uring.getFeatures(ring.segment);
 			if ((features & constants.IORING_FEAT_EXT_ARG) != 0) {
 				// TODO: Review sigset_t *sigmask -> .sigmask = (unsigned long) sigmask,
@@ -275,7 +272,7 @@ class queue {
 			MemorySegment nr_available, MemorySegment flags) {
 		int to_submit = 0;
 
-		if (ts != null) {
+		if (ts != MemorySegment.NULL) {
 			int features = io_uring.getFeatures(ring.segment);
 			if ((features & constants.IORING_FEAT_EXT_ARG) != 0) {
 				return io_uring_wait_cqes_new(ring, cqe_ptr, wait_nr, ts, sigmask, arg, data, cqe, nr_available, flags);

@@ -1,6 +1,5 @@
 package cheshire;
 
-import java.lang.foreign.MemoryLayout.PathElement;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 
@@ -246,7 +245,7 @@ class setup {
 				buf_size = huge_page_size;
 				map_hugetlb = constants.MAP_HUGETLB;
 			}
-			ptr = syscall.__sys_mmap(null, buf_size, constants.PROT_READ | constants.PROT_WRITE,
+			ptr = syscall.__sys_mmap(MemorySegment.NULL, buf_size, constants.PROT_READ | constants.PROT_WRITE,
 					constants.MAP_SHARED | constants.MAP_ANONYMOUS | map_hugetlb, -1, 0);
 			if (IS_ERR(ptr)) {
 				return PTR_ERR(ptr);
@@ -266,7 +265,7 @@ class setup {
 				buf_size = huge_page_size;
 				map_hugetlb = constants.MAP_HUGETLB;
 			}
-			ptr = syscall.__sys_mmap(null, buf_size, constants.PROT_READ | constants.PROT_WRITE,
+			ptr = syscall.__sys_mmap(MemorySegment.NULL, buf_size, constants.PROT_READ | constants.PROT_WRITE,
 					constants.MAP_SHARED | constants.MAP_ANONYMOUS | map_hugetlb, -1, 0);
 			if (IS_ERR(ptr)) {
 				long sqes = io_uring_sq.getSqes(sq);
@@ -305,7 +304,7 @@ class setup {
 			if (ret < 0) {
 				return ret;
 			}
-			if (buf != null) {
+			if (buf != MemorySegment.NULL) {
 				char int_flags = io_uring.getIntFlags(ring);
 				io_uring.setIntFlags(ring, (char) (int_flags | constants.INT_FLAG_APP_MEM));
 			}
