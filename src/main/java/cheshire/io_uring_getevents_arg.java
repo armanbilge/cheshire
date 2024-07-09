@@ -15,7 +15,7 @@ public class io_uring_getevents_arg {
 		this.segment = session.allocate(layout);
 	}
 
-	private static final GroupLayout layout = MemoryLayout.structLayout(
+	public static final GroupLayout layout = MemoryLayout.structLayout(
 			ValueLayout.JAVA_LONG.withName("sigmask"),
 			ValueLayout.JAVA_INT.withName("sigmask_sz"),
 			ValueLayout.JAVA_INT.withName("pad"),

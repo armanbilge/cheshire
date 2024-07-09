@@ -39,13 +39,17 @@ class setup {
 			io_uring_cq.setKflags(cq, cq_ring_ptr + io_cqring_offsets.getFlags(cq_off));
 		}
 
-		// TODO: Review
-		io_uring_sq.setRingMask(sq, MemorySegment.ofAddress(io_uring_sq.getKringMask(sq)).get(ValueLayout.JAVA_INT, 0));
+		// TODO: Review, enough?
+		io_uring_sq.setRingMask(sq,
+				io_uring_sq.getKringMaskSegment(sq).reinterpret(ValueLayout.JAVA_INT.byteSize()).get(ValueLayout.JAVA_INT, 0));
 		io_uring_sq.setRingEntries(sq,
-				MemorySegment.ofAddress(io_uring_sq.getKringEntries(sq)).get(ValueLayout.JAVA_INT, 0));
-		io_uring_cq.setRingMask(cq, MemorySegment.ofAddress(io_uring_cq.getKringMask(cq)).get(ValueLayout.JAVA_INT, 0));
+				io_uring_sq.getKringEntriesSegment(sq).reinterpret(ValueLayout.JAVA_INT.byteSize()).get(ValueLayout.JAVA_INT,
+						0));
+		io_uring_cq.setRingMask(cq,
+				io_uring_cq.getKringMaskSegment(cq).reinterpret(ValueLayout.JAVA_INT.byteSize()).get(ValueLayout.JAVA_INT, 0));
 		io_uring_cq.setRingEntries(cq,
-				MemorySegment.ofAddress(io_uring_cq.getKringEntries(cq)).get(ValueLayout.JAVA_INT, 0));
+				io_uring_cq.getKringEntriesSegment(cq).reinterpret(ValueLayout.JAVA_INT.byteSize()).get(ValueLayout.JAVA_INT,
+						0));
 	};
 
 	private static void io_uring_unmap_rings(MemorySegment sq, MemorySegment cq) {
@@ -92,7 +96,7 @@ class setup {
 				syscall.__sys_mmap(MemorySegment.NULL, io_uring_sq.getRingSz(sq),
 						constants.PROT_READ | constants.PROT_WRITE,
 						constants.MAP_SHARED | constants.MAP_POPULATE, fd, constants.IORING_OFF_SQ_RING).address());
-		MemorySegment sq_ring_ptr = io_uring_sq.getRingPtrSegment(sq);
+		MemorySegment sq_ring_ptr = io_uring_sq.getRingPtrSegment(sq); // only address needed
 		if (IS_ERR(sq_ring_ptr))
 			return PTR_ERR(sq_ring_ptr);
 
@@ -103,7 +107,7 @@ class setup {
 					syscall.__sys_mmap(MemorySegment.NULL, io_uring_cq.getRingSz(cq),
 							constants.PROT_READ | constants.PROT_WRITE,
 							constants.MAP_SHARED | constants.MAP_POPULATE, fd, constants.IORING_OFF_CQ_RING).address());
-			MemorySegment cq_ring_ptr = io_uring_cq.getRingPtrSegment(cq);
+			MemorySegment cq_ring_ptr = io_uring_cq.getRingPtrSegment(cq); // only address needed
 			if (IS_ERR(cq_ring_ptr)) {
 				ret = PTR_ERR(cq_ring_ptr);
 				io_uring_cq.setRingPtr(cq, 0L); // Should be null
@@ -121,7 +125,7 @@ class setup {
 						constants.PROT_READ | constants.PROT_WRITE, constants.MAP_SHARED | constants.MAP_POPULATE, fd,
 						constants.IORING_OFF_SQES).address()); // TODO: MemorySegment 0
 
-		MemorySegment sq_sqes = io_uring_sq.getSqesSegment(sq);
+		MemorySegment sq_sqes = io_uring_sq.getSqesSegment(sq); // only address needed
 		if (IS_ERR(sq_sqes)) {
 			ret = PTR_ERR(sq_sqes);
 			io_uring_unmap_rings(sq, cq);
@@ -340,7 +344,8 @@ class setup {
 		MemorySegment sq5 = io_uring.getSqSegment(ring);
 		int sq_entries = io_uring_sq.getRingEntries(sq5);
 		if ((flags & constants.IORING_SETUP_NO_SQARRAY) == 0) {
-			MemorySegment sq_array = io_uring_sq.getSqArraySegment(sq5);
+			MemorySegment sq_array = io_uring_sq.getSqArraySegment(sq5)
+					.reinterpret(sq_entries * ValueLayout.JAVA_INT.byteSize()); // TODO: enough?
 			for (int index = 0; index < sq_entries; index++) {
 				sq_array.setAtIndex(ValueLayout.JAVA_INT, index, index);
 			}

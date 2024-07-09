@@ -72,7 +72,8 @@ class queue {
 			if (!need_enter) {
 				break;
 			}
-			MemorySegment arg = MemorySegment.ofAddress(get_data.getArg(data));
+			MemorySegment arg = MemorySegment.ofAddress(get_data.getArg(data))
+					.reinterpret(io_uring_getevents_arg.layout.byteSize()); // TODO: enough?
 			if (looped && has_ts) {
 				// TODO: Review
 				// struct io_uring_getevents_arg *arg = data->arg;
@@ -301,7 +302,8 @@ class queue {
 			if (ready != 0) {
 				MemorySegment cq = io_uring.getCqSegment(ring.segment);
 				// unsigned head = *ring->cq.khead;
-				int head = MemorySegment.ofAddress(io_uring_cq.getKhead(cq)).get(ValueLayout.JAVA_INT, 0); // TODO: Get content?
+				int head = MemorySegment.ofAddress(io_uring_cq.getKhead(cq)).reinterpret(ValueLayout.JAVA_INT.byteSize())
+						.get(ValueLayout.JAVA_INT, 0); // TODO: Get content?
 				int mask = io_uring_cq.getRingMask(cq);
 				int last;
 

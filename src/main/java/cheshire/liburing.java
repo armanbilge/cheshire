@@ -56,7 +56,7 @@ public final class liburing {
 				break;
 			}
 			MemorySegment cq2 = io_uring.getCqSegment(ring.segment);
-			MemorySegment cqes = io_uring_cq.getCqesSegment(cq2);
+			MemorySegment cqes = io_uring_cq.getCqesSegment(cq2).reinterpret(io_uring_sqe.layout.byteSize()); // TODO: enough?
 			cqe.copyFrom(
 					cqes.asSlice(((head & mask) << shift) * io_uring_sqe.layout.byteSize(), io_uring_sqe.layout.byteSize()));
 
@@ -115,7 +115,7 @@ public final class liburing {
 		if ((next - head) <= ring_entries) {
 			// TODO: Review logic
 			// sqe = &sq->sqes[(sq->sqe_tail & sq->ring_mask) << shift];
-			MemorySegment sqes = io_uring_sq.getSqesSegment(sq);
+			MemorySegment sqes = io_uring_sq.getSqesSegment(sq).reinterpret(io_uring_sqe.layout.byteSize()); // TODO: enough?
 			int sqe_tail = io_uring_sq.getSqeTail(sq);
 			int ring_mask = io_uring_sq.getRingMask(sq);
 			int index = (sqe_tail & ring_mask) << shift;

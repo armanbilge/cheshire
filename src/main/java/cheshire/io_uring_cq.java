@@ -36,6 +36,14 @@ public final class io_uring_cq {
 		return MemorySegment.ofAddress(getRingPtr(data));
 	}
 
+	public static MemorySegment getKringMaskSegment(MemorySegment data) {
+		return MemorySegment.ofAddress(getKringMask(data));
+	}
+
+	public static MemorySegment getKringEntriesSegment(MemorySegment data) {
+		return MemorySegment.ofAddress(getKringEntries(data));
+	}
+
 	public static long getKhead(MemorySegment data) {
 		return (long) kheadVarHandle.get(data);
 	}
