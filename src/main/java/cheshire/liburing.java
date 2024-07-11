@@ -56,7 +56,7 @@ public final class liburing {
 				break;
 			}
 			MemorySegment cq2 = io_uring.getCqSegment(ring.segment);
-			MemorySegment cqes = io_uring_cq.getCqesSegment(cq2).reinterpret(io_uring_sqe.layout.byteSize()); // TODO: enough?
+			MemorySegment cqes = io_uring_cq.getCqesSegment(cq2).reinterpret(io_uring_sqe.layout.byteSize()); // TODO: enough
 			cqe.copyFrom(
 					cqes.asSlice(((head & mask) << shift) * io_uring_sqe.layout.byteSize(), io_uring_sqe.layout.byteSize()));
 
@@ -76,7 +76,7 @@ public final class liburing {
 		} while (true);
 
 		cqe_ptr.copyFrom(cqe);
-		if (nr_available != MemorySegment.NULL) {
+		if (!utils.areSegmentsEquals(nr_available, MemorySegment.NULL)) {
 			nr_available.set(ValueLayout.JAVA_INT, 0L, available);
 		}
 		return err;

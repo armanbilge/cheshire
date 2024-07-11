@@ -232,11 +232,11 @@ class setup {
 		mem_used = sqes_mem + ring_mem;
 		mem_used = (mem_used + page_size - 1) & ~(page_size - 1);
 
-		if (buf == MemorySegment.NULL && (sqes_mem > huge_page_size || ring_mem > huge_page_size)) {
+		if (utils.areSegmentsEquals(buf, MemorySegment.NULL) && (sqes_mem > huge_page_size || ring_mem > huge_page_size)) {
 			return -constants.ENOMEM;
 		}
 
-		if (buf != MemorySegment.NULL) {
+		if (!utils.areSegmentsEquals(buf, MemorySegment.NULL)) {
 			if (mem_used > buf_size) {
 				return -constants.ENOMEM;
 			}
@@ -308,7 +308,7 @@ class setup {
 			if (ret < 0) {
 				return ret;
 			}
-			if (buf != MemorySegment.NULL) {
+			if (!utils.areSegmentsEquals(buf, MemorySegment.NULL)) {
 				char int_flags = io_uring.getIntFlags(ring);
 				io_uring.setIntFlags(ring, (char) (int_flags | constants.INT_FLAG_APP_MEM));
 			}
