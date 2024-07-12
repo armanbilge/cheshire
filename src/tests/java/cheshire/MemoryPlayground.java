@@ -14,6 +14,10 @@ public class MemoryPlayground {
 				ValueLayout.JAVA_DOUBLE.withName("x"),
 				ValueLayout.JAVA_DOUBLE.withName("y"));
 
+		GroupLayout lineLayout = MemoryLayout.structLayout(
+				pointLayout.withName("start"),
+				pointLayout.withName("end"));
+
 		VarHandle xvarHandle = pointLayout.varHandle(PathElement.groupElement("x"));
 		VarHandle yvarHandle = pointLayout.varHandle(PathElement.groupElement("y"));
 
@@ -24,6 +28,17 @@ public class MemoryPlayground {
 			yvarHandle.set(pointSegment, 4d);
 			System.out.println("Point 1 - " + pointSegment.toString());
 			System.out.println("Point 1x - " + xvarHandle.get(pointSegment));
+
+			MemorySegment lineSegment = memorySession.allocate(lineLayout);
+			MemorySegment start = lineSegment.asSlice(lineLayout.byteOffset(PathElement.groupElement("start")), pointLayout);
+			MemorySegment end = lineSegment.asSlice(lineLayout.byteOffset(PathElement.groupElement("end")), pointLayout);
+
+			xvarHandle.set(start, 1d);
+			yvarHandle.set(start, 2d);
+			xvarHandle.set(end, 5d);
+			yvarHandle.set(end, 6d);
+
+			System.out.println("Line - " + lineSegment.toString());
 
 			// Get segments
 			long addr = pointSegment.address();
@@ -36,6 +51,10 @@ public class MemoryPlayground {
 			System.out.println("Point 3 - " + pointSegment3.toString());
 			System.out.println("Point 3x - " + xvarHandle.get(pointSegment3));
 
+			MemorySegment endPoint = lineSegment.asSlice(lineLayout.byteOffset(PathElement.groupElement("end")), pointLayout);
+			System.out.println("Line end point - " + endPoint.toString());
+			System.out.println("Line end point X - " + xvarHandle.get(endPoint));
+
 			// Comparing segments
 			System.out.println("Point 1 == Point 2 - " + (pointSegment == pointSegment2)); // false
 			System.out.println("Point 2 == Point 3 - " + (pointSegment2 == pointSegment3)); // true
@@ -46,6 +65,11 @@ public class MemoryPlayground {
 			System.out.println("Address 1 == Address 3 - " + (pointSegment.address() == pointSegment3.address())); // true
 
 			System.out.println("null == MemorySegment.NULL - " + (null == MemorySegment.NULL)); // false
+
+			// Reassigning segments
+			System.out.println("Start point X (original) - " + xvarHandle.get(start));
+			start = pointSegment;
+			System.out.println("Start point X = Point 1x - " + xvarHandle.get(start));
 
 		}
 	}

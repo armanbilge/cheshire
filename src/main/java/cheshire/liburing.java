@@ -32,6 +32,8 @@ public final class liburing {
 		io_uring_sqe.setPad2(sqe, 0L);
 	};
 
+	// struct io_uring_cqe **cqe_ptr
+	// Review
 	public static int __io_uring_peek_cqe(io_uring ring, MemorySegment cqe_ptr, MemorySegment nr_available,
 			MemorySegment cqe) {
 		int err = 0;
@@ -48,17 +50,22 @@ public final class liburing {
 		do {
 			// unsigned tail = io_uring_smp_load_acquire(ring->cq.ktail);
 			// unsigned head = *ring->cq.khead;
+			// Review
 			int tail = (int) io_uring_cq.getAcquireKtail(io_uring.getCqSegment(ring.segment));
-			int head = (int) io_uring_cq.getKhead(io_uring.getCqSegment(ring.segment));
+			int head = utils.getIntFromSegment(io_uring_cq.getKheadSegment(io_uring.getCqSegment(ring.segment)));
 			cqe = MemorySegment.NULL;
 			available = tail - head;
 			if (available == 0) {
 				break;
 			}
+
+			long offset = io_uring_cqe.layout.byteSize();
+			long index = ((head & mask) << shift) * offset;
 			MemorySegment cq2 = io_uring.getCqSegment(ring.segment);
-			MemorySegment cqes = io_uring_cq.getCqesSegment(cq2).reinterpret(io_uring_sqe.layout.byteSize()); // TODO: enough
-			cqe.copyFrom(
-					cqes.asSlice(((head & mask) << shift) * io_uring_sqe.layout.byteSize(), io_uring_sqe.layout.byteSize()));
+			MemorySegment cqes = io_uring_cq.getCqesSegment(cq2).reinterpret(index + offset); // TODO: enough
+			// cqe = &ring->cq.cqes[(head & mask) << shift];
+			// Review
+			cqe.copyFrom(cqes.asSlice(index, offset));
 
 			int features = io_uring.getFeatures(ring.segment);
 			long user_data = io_uring_cqe.getUserData(cqe);
@@ -75,6 +82,7 @@ public final class liburing {
 			}
 		} while (true);
 
+		// Review
 		cqe_ptr.copyFrom(cqe);
 		if (!utils.areSegmentsEquals(nr_available, MemorySegment.NULL)) {
 			nr_available.set(ValueLayout.JAVA_INT, 0L, available);
@@ -105,21 +113,25 @@ public final class liburing {
 		}
 		if ((flags & constants.IORING_SETUP_SQPOLL) == 0) {
 			// head = *sq->khead;
-			head = (int) io_uring_sq.getKhead(sq);
+			head = utils.getIntFromSegment(io_uring_sq.getKheadSegment(sq));
 		} else {
 			// head = io_uring_smp_load_acquire(khead);
+			// Review
 			head = (int) io_uring_sq.getAcquireKhead(sq);
 		}
 
 		int ring_entries = io_uring_sq.getRingEntries(sq);
 		if ((next - head) <= ring_entries) {
-			// TODO: Review logic
 			// sqe = &sq->sqes[(sq->sqe_tail & sq->ring_mask) << shift];
-			MemorySegment sqes = io_uring_sq.getSqesSegment(sq).reinterpret(io_uring_sqe.layout.byteSize()); // TODO: enough?
+			// Review
 			int sqe_tail = io_uring_sq.getSqeTail(sq);
 			int ring_mask = io_uring_sq.getRingMask(sq);
-			int index = (sqe_tail & ring_mask) << shift;
-			sqe.segment.copyFrom(sqes.asSlice(index * io_uring_sqe.layout.byteSize(), io_uring_sqe.layout.byteSize()));
+
+			long offset = io_uring_sqe.layout.byteSize();
+			long index = (sqe_tail & ring_mask) << shift * offset;
+
+			MemorySegment sqes = io_uring_sq.getSqesSegment(sq).reinterpret(index + offset); // TODO: enough?
+			sqe.segment.copyFrom(sqes.asSlice(index, offset));
 			io_uring_sq.setSqeTail(sq, next);
 			io_uring_initialize_sqe(sqe.segment);
 			return sqe.segment;
@@ -155,14 +167,17 @@ public final class liburing {
 	public static void io_uring_cq_advance(io_uring ring, int nr) {
 		if (nr != 0) {
 			MemorySegment cq = io_uring.getCqSegment(ring.segment);
+			// io_uring_smp_store_release(cq->khead, *cq->khead + nr);
+			// Review
 			io_uring_cq.setReleaseKhead(cq, io_uring_cq.getKhead(cq) + nr);
 		}
 	};
 
 	public static int io_uring_cq_ready(io_uring ring) {
 		MemorySegment cq = io_uring.getCqSegment(ring.segment);
+		// io_uring_smp_load_acquire(ring->cq.ktail) - *ring->cq.khead;
+		// Review
 		return (int) (io_uring_cq.getAcquireKtail(cq) - io_uring_cq.getKhead(cq));
-
 	};
 
 	public static void io_uring_prep_rw(int op, io_uring_sqe sqe, int fd, MemorySegment addr, int len, long offset) {

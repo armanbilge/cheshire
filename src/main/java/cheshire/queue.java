@@ -15,13 +15,15 @@ class queue {
 			return true;
 		}
 
-		// io_uring_smp_mb(); // TODO: Review
+		// io_uring_smp_mb();
 		// std::atomic_thread_fence(std::memory_order_seq_cst);
-
+		// Review
 		MemorySegment sq = io_uring.getSqSegment(ring);
-		// TODO: Review inside if -> uring_unlikely(IO_URING_READ_ONCE(kflags)
+		// TODO: Review inside if -> uring_unlikely(IO_URING_READ_ONCE(*ring->sq.kflags)
 		long kflags = io_uring_sq.getAcquireKflags(sq);
 		if ((kflags & constants.IORING_SQ_NEED_WAKEUP) != 0) {
+			// Review
+			// *flags |= IORING_ENTER_SQ_WAKEUP
 			flags.set(ValueLayout.JAVA_INT, 0L, (flags.get(ValueLayout.JAVA_INT, 0L) | constants.IORING_ENTER_SQ_WAKEUP));
 			return true;
 		}
@@ -29,6 +31,8 @@ class queue {
 		return false;
 	};
 
+	// struct io_uring_cqe **cqe_ptr
+	// Review
 	private static int _io_uring_get_cqe(io_uring ring, MemorySegment cqe_ptr, MemorySegment data,
 			MemorySegment cqe, MemorySegment nr_available, MemorySegment flags) {
 		boolean looped = false;
@@ -72,11 +76,9 @@ class queue {
 			if (!need_enter) {
 				break;
 			}
-			MemorySegment arg = MemorySegment.ofAddress(get_data.getArg(data))
+			MemorySegment arg = get_data.getArgSegment(data)
 					.reinterpret(io_uring_getevents_arg.layout.byteSize()); // TODO: enough?
 			if (looped && has_ts) {
-				// TODO: Review
-				// struct io_uring_getevents_arg *arg = data->arg;
 				if (utils.areSegmentsEquals(cqe, MemorySegment.NULL) && !utils.areSegmentsEquals(arg, MemorySegment.NULL)
 						&& err == 0) {
 					err = -constants.ETIME;
@@ -145,7 +147,8 @@ class queue {
 			int flags = io_uring.getFlags(ring);
 			if ((flags & constants.IORING_SETUP_SQPOLL) == 0) {
 				// *sq->ktail = tail;
-				io_uring_sq.setKtail(sq, tail);
+				// Review
+				utils.setIntFromSegment(io_uring_sq.getKtailSegment(sq), tail);
 			} else {
 				// io_uring_smp_store_release(sq->ktail, tail);
 				io_uring_sq.setReleaseKtail(sq, tail);
@@ -157,7 +160,8 @@ class queue {
 
 	private static boolean cq_ring_needs_flush(MemorySegment ring) {
 		MemorySegment sq = io_uring.getSqSegment(ring);
-		// IO_URING_READ_ONCE(*ring->sq.kflags) // TODO: std::memory_order_relaxed
+		// IO_URING_READ_ONCE(*ring->sq.kflags) // std::memory_order_relaxed
+		// Review
 		long kflags = io_uring_sq.getAcquireKflags(sq);
 		return ((kflags & (constants.IORING_SQ_CQ_OVERFLOW | constants.IORING_SQ_TASKRUN)) != 0);
 	};
@@ -170,17 +174,19 @@ class queue {
 	private static int io_uring_wait_cqes_new(io_uring ring, MemorySegment cqe_ptr, int wait_nr, MemorySegment ts,
 			MemorySegment sigmask, MemorySegment arg, MemorySegment data, MemorySegment cqe, MemorySegment nr_available,
 			MemorySegment flags) {
-		// TODO: Review sigset_t *sigmask -> .sigmask = (unsigned long) sigmask,
+		// sigset_t *sigmask
+		// .sigmask = (unsigned long) sigmask,
+		// Review
 		io_uring_getevents_arg.setSigmask(arg, sigmask.address());
 		io_uring_getevents_arg.setSigmaskSz(arg, constants._NSIG / 8);
-		// TODO: Same as above for ts
+		// Same as above, but for ts
 		io_uring_getevents_arg.setTs(arg, ts.address());
 
 		get_data.setWaitNr(data, wait_nr);
 		get_data.setGetFlags(data, constants.IORING_ENTER_EXT_ARG);
 		get_data.setSz(data, arg.byteSize());
 		get_data.setHasTs(data, !utils.areSegmentsEquals(ts, MemorySegment.NULL));
-		// TODO: .arg = &arg
+		// .arg = &arg
 		get_data.setArg(data, arg.address());
 
 		return _io_uring_get_cqe(ring, cqe_ptr, data, cqe, nr_available, flags);
@@ -189,7 +195,6 @@ class queue {
 
 	private static int __io_uring_submit_timeout(io_uring ring, int wait_nr, MemorySegment ts, io_uring_sqe sqe) {
 		int ret;
-		// TODO: Review allocation logic of sqe
 		MemorySegment resSqe = liburing.io_uring_get_sqe(ring, sqe);
 		if (utils.areSegmentsEquals(resSqe, MemorySegment.NULL)) {
 			ret = liburing.io_uring_submit(ring);
@@ -232,6 +237,25 @@ class queue {
 		return ret;
 	};
 
+	public static int io_uring_wait_cqes(io_uring ring, MemorySegment cqe_ptr, int wait_nr, MemorySegment ts,
+			MemorySegment sigmask, io_uring_sqe sqe, MemorySegment arg, MemorySegment data, MemorySegment cqe,
+			MemorySegment nr_available, MemorySegment flags) {
+		int to_submit = 0;
+
+		if (!utils.areSegmentsEquals(ts, MemorySegment.NULL)) {
+			int features = io_uring.getFeatures(ring.segment);
+			if ((features & constants.IORING_FEAT_EXT_ARG) != 0) {
+				return io_uring_wait_cqes_new(ring, cqe_ptr, wait_nr, ts, sigmask, arg, data, cqe, nr_available, flags);
+			}
+			to_submit = __io_uring_submit_timeout(ring, wait_nr, ts, sqe);
+			if (to_submit < 0) {
+				return to_submit;
+			}
+		}
+
+		return __io_uring_get_cqe(ring, cqe_ptr, to_submit, wait_nr, sigmask, data, cqe, nr_available, flags);
+	};
+
 	public static int io_uring_submit_and_wait_timeout(io_uring ring, MemorySegment cqe_ptr, int wait_nr,
 			MemorySegment ts, MemorySegment sigmask, MemorySegment arg, MemorySegment data, io_uring_sqe sqe,
 			MemorySegment cqe, MemorySegment nr_available, MemorySegment flags) {
@@ -239,10 +263,12 @@ class queue {
 		if (!utils.areSegmentsEquals(ts, MemorySegment.NULL)) {
 			int features = io_uring.getFeatures(ring.segment);
 			if ((features & constants.IORING_FEAT_EXT_ARG) != 0) {
-				// TODO: Review sigset_t *sigmask -> .sigmask = (unsigned long) sigmask,
+				// sigset_t *sigmask
+				// .sigmask = (unsigned long) sigmask,
+				// Review
 				io_uring_getevents_arg.setSigmask(arg, sigmask.address());
 				io_uring_getevents_arg.setSigmaskSz(arg, constants._NSIG / 8);
-				// TODO: Same as above for ts
+				// Same as above, but for ts
 				io_uring_getevents_arg.setTs(arg, ts.address());
 
 				get_data.setSubmit(data, __io_uring_flush_sq(ring.segment));
@@ -268,25 +294,6 @@ class queue {
 		return __io_uring_submit(ring, __io_uring_flush_sq(ring), wait_nr, false, flags);
 	};
 
-	public static int io_uring_wait_cqes(io_uring ring, MemorySegment cqe_ptr, int wait_nr, MemorySegment ts,
-			MemorySegment sigmask, io_uring_sqe sqe, MemorySegment arg, MemorySegment data, MemorySegment cqe,
-			MemorySegment nr_available, MemorySegment flags) {
-		int to_submit = 0;
-
-		if (!utils.areSegmentsEquals(ts, MemorySegment.NULL)) {
-			int features = io_uring.getFeatures(ring.segment);
-			if ((features & constants.IORING_FEAT_EXT_ARG) != 0) {
-				return io_uring_wait_cqes_new(ring, cqe_ptr, wait_nr, ts, sigmask, arg, data, cqe, nr_available, flags);
-			}
-			to_submit = __io_uring_submit_timeout(ring, wait_nr, ts, sqe);
-			if (to_submit < 0) {
-				return to_submit;
-			}
-		}
-
-		return __io_uring_get_cqe(ring, cqe_ptr, to_submit, wait_nr, sigmask, data, cqe, nr_available, flags);
-	};
-
 	public static int io_uring_peek_batch_cqe(io_uring ring, MemorySegment cqes, int count) {
 		int ready;
 		boolean overflow_checked = false;
@@ -297,13 +304,12 @@ class queue {
 			shift = 1;
 		}
 
-		while (true) { // TODO: Review logic
+		while (true) { // Review logic
 			ready = liburing.io_uring_cq_ready(ring);
 			if (ready != 0) {
 				MemorySegment cq = io_uring.getCqSegment(ring.segment);
 				// unsigned head = *ring->cq.khead;
-				int head = MemorySegment.ofAddress(io_uring_cq.getKhead(cq)).reinterpret(ValueLayout.JAVA_INT.byteSize())
-						.get(ValueLayout.JAVA_INT, 0); // TODO: Get content?
+				int head = utils.getIntFromSegment(io_uring_cq.getKheadSegment(cq));
 				int mask = io_uring_cq.getRingMask(cq);
 				int last;
 

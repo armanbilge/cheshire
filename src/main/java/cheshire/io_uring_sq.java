@@ -54,6 +54,14 @@ public final class io_uring_sq {
 		return MemorySegment.ofAddress(getKringEntries(data));
 	}
 
+	public static MemorySegment getKheadSegment(MemorySegment data) {
+		return MemorySegment.ofAddress(getKhead(data));
+	}
+
+	public static MemorySegment getKtailSegment(MemorySegment data) {
+		return MemorySegment.ofAddress(getKtail(data));
+	}
+
 	public static long getKhead(MemorySegment data) {
 		return (long) kheadVarHandle.get(data);
 	}

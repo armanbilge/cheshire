@@ -24,7 +24,7 @@ public final class io_uring_cq {
 	private static VarHandle koverflowVarHandle = layout.varHandle(PathElement.groupElement("koverflow"));
 	private static VarHandle cqesVarHandle = layout.varHandle(PathElement.groupElement("cqes"));
 	private static VarHandle ringSzVarHandle = layout.varHandle(PathElement.groupElement("ring_sz"));
-	private static VarHandle ringPtrVarHandle = layout.varHandle(PathElement.groupElement("ring_ptr"));
+	public static VarHandle ringPtrVarHandle = layout.varHandle(PathElement.groupElement("ring_ptr"));
 	private static VarHandle ringMaskVarHandle = layout.varHandle(PathElement.groupElement("ring_mask"));
 	private static VarHandle ringEntriesVarHandle = layout.varHandle(PathElement.groupElement("ring_entries"));
 
@@ -42,6 +42,10 @@ public final class io_uring_cq {
 
 	public static MemorySegment getKringEntriesSegment(MemorySegment data) {
 		return MemorySegment.ofAddress(getKringEntries(data));
+	}
+
+	public static MemorySegment getKheadSegment(MemorySegment data) {
+		return MemorySegment.ofAddress(getKhead(data));
 	}
 
 	public static long getKhead(MemorySegment data) {

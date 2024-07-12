@@ -30,6 +30,10 @@ public class get_data {
 	private static VarHandle hasTsVarHandle = layout.varHandle(PathElement.groupElement("has_ts"));
 	private static VarHandle argVarHandle = layout.varHandle(PathElement.groupElement("arg"));
 
+	public static MemorySegment getArgSegment(MemorySegment data) {
+		return MemorySegment.ofAddress(getArg(data));
+	}
+
 	public static int getSubmit(MemorySegment data) {
 		return (int) submitVarHandle.get(data);
 	}
