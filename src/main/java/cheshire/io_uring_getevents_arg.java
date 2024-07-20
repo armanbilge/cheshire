@@ -1,6 +1,5 @@
 package cheshire;
 
-import java.lang.foreign.Arena;
 import java.lang.foreign.GroupLayout;
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemoryLayout.PathElement;
@@ -9,12 +8,6 @@ import java.lang.foreign.ValueLayout;
 import java.lang.invoke.VarHandle;
 
 public class io_uring_getevents_arg {
-	MemorySegment segment;
-
-	public io_uring_getevents_arg(Arena session) {
-		this.segment = session.allocate(layout);
-	}
-
 	public static final GroupLayout layout = MemoryLayout.structLayout(
 			ValueLayout.JAVA_LONG.withName("sigmask"),
 			ValueLayout.JAVA_INT.withName("sigmask_sz"),

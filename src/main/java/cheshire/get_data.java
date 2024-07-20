@@ -1,6 +1,5 @@
 package cheshire;
 
-import java.lang.foreign.Arena;
 import java.lang.foreign.GroupLayout;
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemoryLayout.PathElement;
@@ -9,12 +8,6 @@ import java.lang.foreign.ValueLayout;
 import java.lang.invoke.VarHandle;
 
 public class get_data {
-	MemorySegment segment;
-
-	public get_data(Arena session) {
-		this.segment = session.allocate(layout);
-	}
-
 	public static final GroupLayout layout = MemoryLayout.structLayout(
 			ValueLayout.JAVA_INT.withName("submit"),
 			ValueLayout.JAVA_INT.withName("wait_nr"),

@@ -1,11 +1,6 @@
 package cheshire;
 
 public final class constants {
-	public static final int __NR_io_uring_enter = 536; // or (__NR_Linux + 426) or 426
-	public static final int __NR_io_uring_register = 537; // or (__NR_Linux + 427) or 427
-	public static final int __NR_io_uring_setup = 535; // or (__NR_Linux + 425) or 425
-	public static final int _NSIG = 64; // TODO: Review
-
 	public static final int INT_FLAG_APP_MEM = 4;
 	public static final int INT_FLAG_REG_REG_RING = 2;
 	public static final int INT_FLAG_REG_RING = 1;
@@ -74,4 +69,28 @@ public final class constants {
 	public static final int EINVAL = 22;
 	public static final int ETIME = 62;
 	public static final long MAP_FAILED = -1L;
+
+	public static final int __NR_io_uring_setup;
+	public static final int __NR_io_uring_enter;
+	public static final int __NR_io_uring_register;
+	public static final int __NR_Linux = 4000;
+	public static final int _NSIG = 64; // TODO: Review
+
+	static {
+		String architecture = System.getProperty("os.arch");
+
+		if ("alpha".equals(architecture)) {
+			__NR_io_uring_setup = 535;
+			__NR_io_uring_enter = 536;
+			__NR_io_uring_register = 537;
+		} else if ("mips".equals(architecture)) {
+			__NR_io_uring_setup = __NR_Linux + 425;
+			__NR_io_uring_enter = __NR_Linux + 426;
+			__NR_io_uring_register = __NR_Linux + 427;
+		} else {
+			__NR_io_uring_setup = 425;
+			__NR_io_uring_enter = 426;
+			__NR_io_uring_register = 427;
+		}
+	}
 }

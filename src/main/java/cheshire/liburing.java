@@ -230,8 +230,8 @@ public final class liburing {
 		io_uring_sqe.setUserData(sqe.segment, data);
 	};
 
-	public static long io_uring_cqe_get_data64(MemorySegment cqe) {
-		return io_uring_cqe.getUserData(cqe);
+	public static long io_uring_cqe_get_data64(io_uring_cqe cqe) {
+		return io_uring_cqe.getUserData(cqe.segment);
 	};
 
 	public static void io_uring_prep_shutdown(io_uring_sqe sqe, int fd, int how) {
