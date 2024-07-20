@@ -10,13 +10,9 @@ import java.lang.invoke.VarHandle;
 
 public final class io_uring_params {
 	MemorySegment segment;
-	MemorySegment sqEntriesSegment;
-	MemorySegment cqEntriesSegment;
 
 	public io_uring_params(Arena session) {
 		this.segment = session.allocate(io_uring_params.layout);
-		this.sqEntriesSegment = session.allocate(ValueLayout.JAVA_INT);
-		this.cqEntriesSegment = session.allocate(ValueLayout.JAVA_INT);
 	}
 
 	public static final GroupLayout layout = MemoryLayout.structLayout(
@@ -35,6 +31,16 @@ public final class io_uring_params {
 	private static VarHandle cqEntriesVarHandle = layout.varHandle(PathElement.groupElement("cq_entries"));
 	private static VarHandle flagsVarHandle = layout.varHandle(PathElement.groupElement("flags"));
 	private static VarHandle featuresVarHandle = layout.varHandle(PathElement.groupElement("features"));
+
+	public static MemorySegment getSqEntriesSegment(MemorySegment data) {
+		return data.asSlice(io_uring_params.layout.byteOffset(PathElement.groupElement("sq_entries")),
+				ValueLayout.JAVA_INT);
+	}
+
+	public static MemorySegment getCqEntriesSegment(MemorySegment data) {
+		return data.asSlice(io_uring_params.layout.byteOffset(PathElement.groupElement("cq_entries")),
+				ValueLayout.JAVA_INT);
+	}
 
 	public static MemorySegment getSqOffSegment(MemorySegment data) {
 		return data.asSlice(io_uring_params.layout.byteOffset(PathElement.groupElement("sq_off")),

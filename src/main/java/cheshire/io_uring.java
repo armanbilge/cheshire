@@ -10,11 +10,11 @@ import java.lang.invoke.VarHandle;
 
 public final class io_uring {
 	MemorySegment segment;
-	MemorySegment flags;
+	MemorySegment allocations;
 
 	public io_uring(Arena session) {
 		this.segment = session.allocate(layout);
-		this.flags = session.allocate(ValueLayout.JAVA_INT);
+		this.allocations = session.allocate(ring_allocations.layout);
 	}
 
 	public static final GroupLayout layout = MemoryLayout

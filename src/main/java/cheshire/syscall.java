@@ -12,75 +12,89 @@ class syscall {
 	private static SymbolLookup stdlibLookup = nativeLinker.defaultLookup();
 	private static SymbolLookup loaderLookup = SymbolLookup.loaderLookup();
 
-	public static int __sys_io_uring_register(int fd, int opcode, MemorySegment arg, int nr_args) {
-		FunctionDescriptor descriptor = FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
-				ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT);
-		String symbolName = "syscall";
+	private static MethodHandle getMethod(String symbolName, FunctionDescriptor descriptor) {
 		MethodHandle methodHandle = loaderLookup.find(symbolName)
 				.or(() -> stdlibLookup.find(symbolName))
 				.map(symbolSegment -> nativeLinker.downcallHandle(symbolSegment, descriptor))
 				.orElse(null);
 		if (methodHandle == null) {
-			System.err.println("Failed to find the symbol: " + symbolName);
-			return -1; // TODO: return -errno;
+			throw new RuntimeException("Failed to find the symbol: " + symbolName);
 		}
+		return methodHandle;
+	}
+
+	private static MethodHandle syscall3() {
+		FunctionDescriptor descriptor = FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+				ValueLayout.JAVA_INT, ValueLayout.ADDRESS);
+		return getMethod("syscall", descriptor);
+	}
+
+	private static MethodHandle syscall5() {
+		FunctionDescriptor descriptor = FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+				ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT);
+		return getMethod("syscall", descriptor);
+	}
+
+	private static MethodHandle syscall7() {
+		FunctionDescriptor descriptor = FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+				ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS,
+				ValueLayout.JAVA_LONG);
+		return getMethod("syscall", descriptor);
+	}
+
+	private static MethodHandle close() {
+		FunctionDescriptor descriptor = FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+				ValueLayout.JAVA_INT);
+		return getMethod("close", descriptor);
+	}
+
+	private static MethodHandle munmap() {
+		FunctionDescriptor descriptor = FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS,
+				ValueLayout.JAVA_LONG);
+		return getMethod("munmap", descriptor);
+	}
+
+	private static MethodHandle mmap() {
+		FunctionDescriptor descriptor = FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+				ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG);
+		return getMethod("mmap", descriptor);
+	}
+
+	public static int __sys_io_uring_register(int fd, int opcode, MemorySegment arg, int nr_args) {
 		try {
-			int ret = (int) methodHandle.invokeExact(constants.__NR_io_uring_register, fd, opcode, arg.address(), nr_args);
+			int ret = (int) syscall5().invokeExact(constants.__NR_io_uring_register, fd, opcode, arg.address(), nr_args);
 			if (ret < 0) {
 				throw new RuntimeException("io_uring_register syscall failed");
 			}
 			return ret;
-		} catch (Throwable e) {
-			e.printStackTrace();
-			return -1; // TODO: return -errno;
+		} catch (Throwable cause) {
+			throw new RuntimeException(cause);
 		}
 	}
 
 	public static int __sys_io_uring_setup(int entries, MemorySegment p) {
-		FunctionDescriptor descriptor = FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
-				ValueLayout.JAVA_INT, ValueLayout.ADDRESS);
-		String symbolName = "syscall";
-		MethodHandle methodHandle = loaderLookup.find(symbolName)
-				.or(() -> stdlibLookup.find(symbolName))
-				.map(symbolSegment -> nativeLinker.downcallHandle(symbolSegment, descriptor))
-				.orElse(null);
-		if (methodHandle == null) {
-			System.err.println("Failed to find the symbol: " + symbolName);
-			return -1; // TODO: return -errno;
-		}
 		try {
-			int ret = (int) methodHandle.invokeExact(constants.__NR_io_uring_setup, entries, p.address());
+			int ret = (int) syscall3().invokeExact(constants.__NR_io_uring_setup, entries, p.address());
 			if (ret < 0) {
 				throw new RuntimeException("io_uring_setup syscall failed");
 			}
 			return ret;
-		} catch (Throwable e) {
-			return e.hashCode(); // TODO: return -errno;
+		} catch (Throwable cause) {
+			throw new RuntimeException(cause);
 		}
 	}
 
 	public static int __sys_io_uring_enter2(int fd, int to_submit, int min_complete, int flags, MemorySegment sig,
 			long sz) {
-		FunctionDescriptor descriptor = FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
-				ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG);
-		String symbolName = "syscall";
-		MethodHandle methodHandle = loaderLookup.find(symbolName)
-				.or(() -> stdlibLookup.find(symbolName))
-				.map(symbolSegment -> nativeLinker.downcallHandle(symbolSegment, descriptor))
-				.orElse(null);
-		if (methodHandle == null) {
-			System.err.println("Failed to find the symbol: " + symbolName);
-			return -1; // TODO: return -errno;
-		}
 		try {
-			int ret = (int) methodHandle.invokeExact(constants.__NR_io_uring_enter, fd, to_submit, min_complete, flags, sig,
+			int ret = (int) syscall7().invokeExact(constants.__NR_io_uring_enter, fd, to_submit, min_complete, flags, sig,
 					sz);
 			if (ret < 0) {
-				throw new RuntimeException("close syscall failed");
+				throw new RuntimeException("io_uring_enter2 syscall failed");
 			}
 			return ret;
-		} catch (Throwable e) {
-			return e.hashCode(); // TODO: return -errno;
+		} catch (Throwable cause) {
+			throw new RuntimeException(cause);
 		}
 	}
 
@@ -89,72 +103,39 @@ class syscall {
 	}
 
 	public static int __sys_close(int fd) {
-		FunctionDescriptor descriptor = FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
-				ValueLayout.JAVA_INT);
-		String symbolName = "close";
-		MethodHandle methodHandle = loaderLookup.find(symbolName)
-				.or(() -> stdlibLookup.find(symbolName))
-				.map(symbolSegment -> nativeLinker.downcallHandle(symbolSegment, descriptor))
-				.orElse(null);
-		if (methodHandle == null) {
-			System.err.println("Failed to find the symbol: " + symbolName);
-			return -1; // TODO: return -errno;
-		}
 		try {
-			int ret = (int) methodHandle.invokeExact(constants.__NR_io_uring_setup, fd);
+			int ret = (int) close().invokeExact(constants.__NR_io_uring_setup, fd);
 			if (ret < 0) {
 				throw new RuntimeException("close syscall failed");
 			}
 			return ret;
-		} catch (Throwable e) {
-			return e.hashCode();
-			// TODO: return -errno;
+		} catch (Throwable cause) {
+			throw new RuntimeException(cause);
 		}
 	}
 
 	public static int __sys_munmap(long addr, long length) {
-		FunctionDescriptor descriptor = FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS,
-				ValueLayout.JAVA_LONG);
-		String symbolName = "munmap";
-		MethodHandle methodHandle = loaderLookup.find(symbolName)
-				.or(() -> stdlibLookup.find(symbolName))
-				.map(symbolSegment -> nativeLinker.downcallHandle(symbolSegment, descriptor))
-				.orElse(null);
-		if (methodHandle == null) {
-			System.err.println("Failed to find the symbol: " + symbolName);
-			return -1; // TODO: return -errno;
-		}
 		try {
-			int ret = (int) methodHandle.invokeExact(addr, length);
+			int ret = (int) munmap().invokeExact(addr, length);
 			if (ret < 0) {
 				throw new RuntimeException("munmap syscall failed");
 			}
 			return ret;
-		} catch (Throwable e) {
-			return e.hashCode(); // TODO: return -errno;
+		} catch (Throwable cause) {
+			throw new RuntimeException(cause);
 		}
 	};
 
 	public static MemorySegment __sys_mmap(MemorySegment addr, long length, int prot, int flags, int fd, long offset) {
-		FunctionDescriptor descriptor = FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-				ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG);
-		String symbolName = "mmap";
-		MethodHandle methodHandle = loaderLookup.find(symbolName)
-				.or(() -> stdlibLookup.find(symbolName))
-				.map(symbolSegment -> nativeLinker.downcallHandle(symbolSegment, descriptor))
-				.orElse(null);
-		if (methodHandle == null) {
-			System.err.println("Failed to find the symbol: " + symbolName);
-			return MemorySegment.NULL;// TODO
-		}
 		try {
-			MemorySegment ret = (MemorySegment) methodHandle.invokeExact(addr.address(), length, prot, flags, fd, offset);
+			// Review
+			MemorySegment ret = (MemorySegment) mmap().invokeExact(addr.address(), length, prot, flags, fd, offset);
 			if (ret.address() == constants.MAP_FAILED) {
 				throw new RuntimeException("mmap syscall failed");
 			}
 			return addr;
-		} catch (Throwable e) {
-			return MemorySegment.NULL;// TODO
+		} catch (Throwable cause) {
+			throw new RuntimeException(cause);
 		}
 	};
 }

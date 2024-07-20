@@ -15,7 +15,7 @@ public class get_data {
 		this.segment = session.allocate(layout);
 	}
 
-	private static final GroupLayout layout = MemoryLayout.structLayout(
+	public static final GroupLayout layout = MemoryLayout.structLayout(
 			ValueLayout.JAVA_INT.withName("submit"),
 			ValueLayout.JAVA_INT.withName("wait_nr"),
 			ValueLayout.JAVA_INT.withName("get_flags"),

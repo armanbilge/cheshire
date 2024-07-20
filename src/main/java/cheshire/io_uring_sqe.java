@@ -15,6 +15,10 @@ public final class io_uring_sqe {
 		this.segment = session.allocate(layout);
 	}
 
+	public io_uring_sqe(MemorySegment s) {
+		this.segment = s;
+	}
+
 	public static final GroupLayout layout = MemoryLayout
 			.structLayout(ValueLayout.JAVA_CHAR.withName("opcode"), ValueLayout.JAVA_CHAR.withName("flags"),
 					ValueLayout.JAVA_SHORT.withName("ioprio"), ValueLayout.JAVA_INT.withName("fd"),
