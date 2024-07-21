@@ -1,6 +1,7 @@
 package cheshire;
 
 public final class constants {
+
 	public static final int INT_FLAG_APP_MEM = 4;
 	public static final int INT_FLAG_REG_REG_RING = 2;
 	public static final int INT_FLAG_REG_RING = 1;
@@ -63,18 +64,20 @@ public final class constants {
 	public static final int PROT_READ = 0x1;
 	public static final int PROT_WRITE = 0x2;
 
-	// TODO: Review
+	// Review error constants
 	public static final int ENOMEM = 5;
 	public static final int EAGAIN = 11;
 	public static final int EINVAL = 22;
 	public static final int ETIME = 62;
 	public static final long MAP_FAILED = -1L;
 
+	// Review
+	public static final int _NSIG = 64;
+
 	public static final int __NR_io_uring_setup;
 	public static final int __NR_io_uring_enter;
 	public static final int __NR_io_uring_register;
 	public static final int __NR_Linux = 4000;
-	public static final int _NSIG = 64; // TODO: Review
 
 	static {
 		String architecture = System.getProperty("os.arch");

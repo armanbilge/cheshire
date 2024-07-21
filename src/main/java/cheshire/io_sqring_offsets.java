@@ -8,6 +8,7 @@ import java.lang.foreign.ValueLayout;
 import java.lang.invoke.VarHandle;
 
 public final class io_sqring_offsets {
+
 	public static final GroupLayout layout = MemoryLayout.structLayout(
 			ValueLayout.JAVA_INT.withName("head"),
 			ValueLayout.JAVA_INT.withName("tail"),
@@ -17,7 +18,8 @@ public final class io_sqring_offsets {
 			ValueLayout.JAVA_INT.withName("dropped"),
 			ValueLayout.JAVA_INT.withName("array"),
 			ValueLayout.JAVA_INT.withName("resv1"),
-			ValueLayout.JAVA_LONG.withName("user_addr")).withName("io_sqring_offsets");
+			ValueLayout.JAVA_LONG.withName("user_addr"))
+			.withName("io_sqring_offsets");
 
 	private static VarHandle headVarHandle = layout.varHandle(PathElement.groupElement("head"));
 	private static VarHandle tailVarHandle = layout.varHandle(PathElement.groupElement("tail"));
@@ -30,65 +32,66 @@ public final class io_sqring_offsets {
 
 	public static int getHead(MemorySegment data) {
 		return (int) headVarHandle.get(data);
-	}
-
-	public static int getTail(MemorySegment data) {
-		return (int) tailVarHandle.get(data);
-	}
-
-	public static int getRingMask(MemorySegment data) {
-		return (int) ringMaskVarHandle.get(data);
-	}
-
-	public static int getRingEntries(MemorySegment data) {
-		return (int) ringEntriesVarHandle.get(data);
-	}
-
-	public static int getDropped(MemorySegment data) {
-		return (int) droppedVarHandle.get(data);
-	}
-
-	public static int getArray(MemorySegment data) {
-		return (int) arrayVarHandle.get(data);
-	}
-
-	public static int getFlags(MemorySegment data) {
-		return (int) flagsVarHandle.get(data);
-	}
-
-	public static long getUserAddr(MemorySegment data) {
-		return (long) userAddrVarHandle.get(data);
-	}
+	};
 
 	public static void setHead(MemorySegment data, int value) {
 		headVarHandle.set(data, value);
-	}
+	};
+
+	public static int getTail(MemorySegment data) {
+		return (int) tailVarHandle.get(data);
+	};
 
 	public static void setTail(MemorySegment data, int value) {
 		tailVarHandle.set(data, value);
-	}
+	};
+
+	public static int getRingMask(MemorySegment data) {
+		return (int) ringMaskVarHandle.get(data);
+	};
 
 	public static void setRingMask(MemorySegment data, int value) {
 		ringMaskVarHandle.set(data, value);
-	}
+	};
+
+	public static int getRingEntries(MemorySegment data) {
+		return (int) ringEntriesVarHandle.get(data);
+	};
 
 	public static void setRingEntries(MemorySegment data, int value) {
 		ringEntriesVarHandle.set(data, value);
-	}
+	};
+
+	public static int getDropped(MemorySegment data) {
+		return (int) droppedVarHandle.get(data);
+	};
 
 	public static void setDropped(MemorySegment data, int value) {
 		droppedVarHandle.set(data, value);
-	}
+	};
+
+	public static int getArray(MemorySegment data) {
+		return (int) arrayVarHandle.get(data);
+	};
 
 	public static void setArray(MemorySegment data, int value) {
 		arrayVarHandle.set(data, value);
-	}
+	};
+
+	public static int getFlags(MemorySegment data) {
+		return (int) flagsVarHandle.get(data);
+	};
 
 	public static void setFlags(MemorySegment data, int value) {
 		flagsVarHandle.set(data, value);
-	}
+	};
+
+	public static long getUserAddr(MemorySegment data) {
+		return (long) userAddrVarHandle.get(data);
+	};
 
 	public static void setUserAddr(MemorySegment data, long value) {
 		userAddrVarHandle.set(data, value);
-	}
-}
+	};
+
+};
