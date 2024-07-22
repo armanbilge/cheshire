@@ -1,4 +1,4 @@
-package cheshire;
+package cheshire.playground;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
