@@ -36,91 +36,75 @@ public final class io_uring_cq {
 	private static VarHandle ringMaskVarHandle = layout.varHandle(PathElement.groupElement("ring_mask"));
 	private static VarHandle ringEntriesVarHandle = layout.varHandle(PathElement.groupElement("ring_entries"));
 
-	public static long getKhead(MemorySegment data) {
-		return (long) kheadVarHandle.get(data);
+	public static MemorySegment getKhead(MemorySegment data) {
+		return (MemorySegment) kheadVarHandle.get(data);
 	};
 
-	public static long getAcquireKhead(MemorySegment data) {
-		return (long) kheadVarHandle.getAcquire(data);
+	public static MemorySegment getAcquireKhead(MemorySegment data) {
+		return (MemorySegment) kheadVarHandle.getAcquire(data);
 	};
 
-	public static MemorySegment getKheadSegment(MemorySegment data) {
-		return MemorySegment.ofAddress(getKhead(data));
-	};
-
-	public static void setKhead(MemorySegment data, long value) {
+	public static void setKhead(MemorySegment data, MemorySegment value) {
 		kheadVarHandle.set(data, value);
 	};
 
-	public static void setReleaseKhead(MemorySegment data, long value) {
+	public static void setReleaseKhead(MemorySegment data, MemorySegment value) {
 		kheadVarHandle.setRelease(data, value);
 	};
 
-	public static long getKtail(MemorySegment data) {
-		return (long) ktailVarHandle.get(data);
+	public static MemorySegment getKtail(MemorySegment data) {
+		return (MemorySegment) ktailVarHandle.get(data);
 	};
 
-	public static long getAcquireKtail(MemorySegment data) {
-		return (long) ktailVarHandle.getAcquire(data);
+	public static MemorySegment getAcquireKtail(MemorySegment data) {
+		return (MemorySegment) ktailVarHandle.getAcquire(data);
 	};
 
-	public static void setKtail(MemorySegment data, long value) {
+	public static void setKtail(MemorySegment data, MemorySegment value) {
 		ktailVarHandle.set(data, value);
 	};
 
-	public static void setReleaseKtail(MemorySegment data, long value) {
+	public static void setReleaseKtail(MemorySegment data, MemorySegment value) {
 		ktailVarHandle.setRelease(data, value);
 	};
 
-	public static long getKringMask(MemorySegment data) {
-		return (long) kringMaskVarHandle.get(data);
+	public static MemorySegment getKringMask(MemorySegment data) {
+		return (MemorySegment) kringMaskVarHandle.get(data);
 	};
 
-	public static MemorySegment getKringMaskSegment(MemorySegment data) {
-		return MemorySegment.ofAddress(getKringMask(data));
-	};
-
-	public static void setKringMask(MemorySegment data, long value) {
+	public static void setKringMask(MemorySegment data, MemorySegment value) {
 		kringMaskVarHandle.set(data, value);
 	};
 
-	public static long getKringEntries(MemorySegment data) {
-		return (long) kringEntriesVarHandle.get(data);
+	public static MemorySegment getKringEntries(MemorySegment data) {
+		return (MemorySegment) kringEntriesVarHandle.get(data);
 	};
 
-	public static MemorySegment getKringEntriesSegment(MemorySegment data) {
-		return MemorySegment.ofAddress(getKringEntries(data));
-	};
-
-	public static void setKringEntries(MemorySegment data, long value) {
+	public static void setKringEntries(MemorySegment data, MemorySegment value) {
 		kringEntriesVarHandle.set(data, value);
 	};
 
-	public static long getKflags(MemorySegment data) {
-		return (long) kflagsVarHandle.get(data);
+	public static MemorySegment getKflags(MemorySegment data) {
+		return (MemorySegment) kflagsVarHandle.get(data);
 	};
 
-	public static void setKflags(MemorySegment data, long value) {
+	public static void setKflags(MemorySegment data, MemorySegment value) {
 		kflagsVarHandle.set(data, value);
 	};
 
-	public static long getKoverflow(MemorySegment data) {
-		return (long) koverflowVarHandle.get(data);
+	public static MemorySegment getKoverflow(MemorySegment data) {
+		return (MemorySegment) koverflowVarHandle.get(data);
 	};
 
-	public static void setKoverflow(MemorySegment data, long value) {
+	public static void setKoverflow(MemorySegment data, MemorySegment value) {
 		koverflowVarHandle.set(data, value);
 	};
 
-	public static long getCqes(MemorySegment data) {
-		return (long) cqesVarHandle.get(data);
+	public static MemorySegment getCqes(MemorySegment data) {
+		return (MemorySegment) cqesVarHandle.get(data);
 	};
 
-	public static MemorySegment getCqesSegment(MemorySegment data) {
-		return MemorySegment.ofAddress(getCqes(data));
-	};
-
-	public static void setCqes(MemorySegment data, long value) {
+	public static void setCqes(MemorySegment data, MemorySegment value) {
 		cqesVarHandle.set(data, value);
 	};
 
@@ -132,16 +116,12 @@ public final class io_uring_cq {
 		ringSzVarHandle.set(data, value);
 	};
 
-	public static long getRingPtr(MemorySegment data) {
-		return (long) ringPtrVarHandle.get(data);
+	public static MemorySegment getRingPtr(MemorySegment data) {
+		return (MemorySegment) ringPtrVarHandle.get(data);
 	};
 
-	public static void setRingPtr(MemorySegment data, long value) {
+	public static void setRingPtr(MemorySegment data, MemorySegment value) {
 		ringPtrVarHandle.set(data, value);
-	};
-
-	public static MemorySegment getRingPtrSegment(MemorySegment data) {
-		return MemorySegment.ofAddress(getRingPtr(data));
 	};
 
 	public static int getRingMask(MemorySegment data) {

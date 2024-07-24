@@ -46,8 +46,8 @@ public final class liburing {
 		}
 		MemorySegment cqe = ring_allocations.getCqeSegment(ring.allocations);
 		do {
-			int tail = (int) io_uring_cq.getAcquireKtail(io_uring.getCqSegment(ring.segment));
-			int head = utils.getIntFromSegment(io_uring_cq.getKheadSegment(io_uring.getCqSegment(ring.segment)));
+			int tail = utils.getIntFromSegment(io_uring_cq.getAcquireKtail(cq));
+			int head = utils.getIntFromSegment(io_uring_cq.getKhead(cq));
 			cqe = MemorySegment.NULL;
 			available = tail - head;
 			if (available == 0) {
@@ -56,7 +56,7 @@ public final class liburing {
 
 			long offset = io_uring_cqe.layout.byteSize();
 			long index = ((head & mask) << shift) * offset;
-			MemorySegment cqes = io_uring_cq.getCqesSegment(cq).reinterpret(index + offset); // Enough?
+			MemorySegment cqes = io_uring_cq.getCqes(cq);
 			cqe.copyFrom(cqes.asSlice(index, offset));
 
 			int features = io_uring.getFeatures(ring.segment);
@@ -106,9 +106,9 @@ public final class liburing {
 			shift = 1;
 		}
 		if ((flags & constants.IORING_SETUP_SQPOLL) == 0) {
-			head = utils.getIntFromSegment(io_uring_sq.getKheadSegment(sq));
+			head = utils.getIntFromSegment(io_uring_sq.getKhead(sq));
 		} else {
-			head = (int) io_uring_sq.getAcquireKhead(sq);
+			head = utils.getIntFromSegment(io_uring_sq.getAcquireKhead(sq));
 		}
 
 		if ((next - head) <= io_uring_sq.getRingEntries(sq)) {
@@ -118,7 +118,7 @@ public final class liburing {
 			long offset = io_uring_sqe.layout.byteSize();
 			long index = ((sqeTail & ringMask) << shift) * offset;
 
-			MemorySegment sqes = io_uring_sq.getSqesSegment(sq).reinterpret(index + offset); // TODO: enough?
+			MemorySegment sqes = io_uring_sq.getSqes(sq);
 			MemorySegment sqe = ring_allocations.getSqeSegment(ring.allocations);
 
 			sqe.copyFrom(sqes.asSlice(index, offset));
@@ -154,13 +154,14 @@ public final class liburing {
 	public static void io_uring_cq_advance(io_uring ring, int nr) {
 		if (nr != 0) {
 			MemorySegment cq = io_uring.getCqSegment(ring.segment);
-			io_uring_cq.setReleaseKhead(cq, io_uring_cq.getKhead(cq) + nr);
+			MemorySegment khead = io_uring_cq.getKhead(cq);
+			io_uring_cq.setReleaseKhead(cq, MemorySegment.ofAddress(khead.address() + nr).reinterpret(khead.byteSize()));
 		}
 	};
 
 	public static int io_uring_cq_ready(io_uring ring) {
 		MemorySegment cq = io_uring.getCqSegment(ring.segment);
-		return (int) (io_uring_cq.getAcquireKtail(cq) - io_uring_cq.getKhead(cq));
+		return (int) (io_uring_cq.getAcquireKtail(cq).address() - io_uring_cq.getKhead(cq).address());
 	};
 
 	public static void io_uring_prep_rw(int op, io_uring_sqe sqe, int fd, MemorySegment addr, int len, long offset) {

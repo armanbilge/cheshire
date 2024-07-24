@@ -18,8 +18,12 @@ public class utils {
 		return s.reinterpret(ValueLayout.JAVA_INT.byteSize()).get(ValueLayout.JAVA_INT, 0);
 	};
 
-	public static void setIntFromSegment(MemorySegment s, int value) {
-		s.reinterpret(ValueLayout.JAVA_INT.byteSize()).set(ValueLayout.JAVA_INT, 0, value);
+	public static long getLongFromSegment(MemorySegment s) {
+		return s.reinterpret(ValueLayout.JAVA_LONG.byteSize()).get(ValueLayout.JAVA_LONG, 0);
+	};
+
+	public static MemorySegment getSegmentWithOffset(MemorySegment s, long off) {
+		return MemorySegment.ofAddress(s.address() + off).reinterpret(s.byteSize());
 	};
 
 };

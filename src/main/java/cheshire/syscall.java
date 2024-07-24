@@ -61,6 +61,11 @@ class syscall {
 		return getMethod("mmap", descriptor);
 	};
 
+	private static MethodHandle getpagesize() {
+		FunctionDescriptor descriptor = FunctionDescriptor.of(ValueLayout.JAVA_INT);
+		return getMethod("getpagesize", descriptor);
+	};
+
 	public static int __sys_io_uring_register(int fd, int opcode, MemorySegment arg, int nrArgs) {
 		try {
 			int ret = (int) syscall5().invokeExact(constants.__NR_io_uring_register, fd, opcode, arg, nrArgs);
@@ -115,7 +120,7 @@ class syscall {
 		}
 	};
 
-	public static int __sys_munmap(long addr, long length) {
+	public static int __sys_munmap(MemorySegment addr, long length) {
 		try {
 			int ret = (int) munmap().invokeExact(addr, length);
 			if (ret < 0) {
@@ -133,9 +138,18 @@ class syscall {
 			if (ret.address() == constants.MAP_FAILED) {
 				throw new RuntimeException("mmap syscall failed");
 			}
-			return addr;
+			return MemorySegment.ofAddress(ret.address()).reinterpret(length);
 		} catch (Throwable cause) {
 			throw new RuntimeException(cause);
+		}
+	};
+
+	public static long get_page_size() {
+		try {
+			long ret = (long) getpagesize().invokeExact();
+			return ret;
+		} catch (Throwable cause) {
+			return 4096;
 		}
 	};
 

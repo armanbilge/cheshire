@@ -17,7 +17,7 @@ class queue {
 		// io_uring_smp_mb();
 		// std::atomic_thread_fence(std::memory_order_seq_cst);
 		// Review inside if -> uring_unlikely(IO_URING_READ_ONCE(*ring->sq.kflags)
-		long kflags = io_uring_sq.getAcquireKflags(io_uring.getSqSegment(ring));
+		long kflags = utils.getLongFromSegment(io_uring_sq.getAcquireKflags(io_uring.getSqSegment(ring)));
 		if ((kflags & constants.IORING_SQ_NEED_WAKEUP) != 0) {
 			flags.set(ValueLayout.JAVA_INT, 0L, (flags.get(ValueLayout.JAVA_INT, 0L) | constants.IORING_ENTER_SQ_WAKEUP));
 			return true;
@@ -135,20 +135,23 @@ class queue {
 			io_uring_sq.setSqeHead(sq, tail);
 
 			int flags = io_uring.getFlags(ring);
+			MemorySegment ktail = io_uring_sq.getKtail(sq);
 			if ((flags & constants.IORING_SETUP_SQPOLL) == 0) {
-				utils.setIntFromSegment(io_uring_sq.getKtailSegment(sq), tail);
+				ktail.set(ValueLayout.JAVA_INT, 0L, tail);
 			} else {
-				io_uring_sq.setReleaseKtail(sq, tail);
+				// Review workaround
+				ktail.set(ValueLayout.JAVA_INT, 0L, tail);
+				io_uring_sq.setReleaseKtail(sq, ktail);
 			}
 		}
 		// return tail - IO_URING_READ_ONCE(*sq->khead);
-		return tail - (int) io_uring_sq.getAcquireKhead(sq);
+		return tail - utils.getIntFromSegment(io_uring_sq.getAcquireKhead(sq));
 	};
 
 	private static boolean cq_ring_needs_flush(MemorySegment ring) {
 		MemorySegment sq = io_uring.getSqSegment(ring);
 		// IO_URING_READ_ONCE(*ring->sq.kflags) // std::memory_order_relaxed
-		long kflags = io_uring_sq.getAcquireKflags(sq);
+		long kflags = utils.getLongFromSegment(io_uring_sq.getAcquireKflags(sq));
 		return ((kflags & (constants.IORING_SQ_CQ_OVERFLOW | constants.IORING_SQ_TASKRUN)) != 0);
 	};
 
@@ -279,14 +282,14 @@ class queue {
 			ready = liburing.io_uring_cq_ready(ring);
 			if (ready != 0) {
 				MemorySegment cq = io_uring.getCqSegment(ring.segment);
-				int head = utils.getIntFromSegment(io_uring_cq.getKheadSegment(cq));
+				int head = utils.getIntFromSegment(io_uring_cq.getKhead(cq));
 				int mask = io_uring_cq.getRingMask(cq);
 				int last;
 
 				count = count > ready ? ready : count;
 				last = head + count;
 				long offset = io_uring_cqe.layout.byteSize();
-				MemorySegment cqesSegment = io_uring_cq.getCqesSegment(cq).reinterpret((last + 1) * offset); // Enough?
+				MemorySegment cqesSegment = io_uring_cq.getCqes(cq);
 				for (int i = 0; head != last; head++, i++) {
 					long index = ((head & mask) << shift) * offset;
 					cqes.setAtIndex(ValueLayout.ADDRESS, i, cqesSegment.asSlice(index, offset));

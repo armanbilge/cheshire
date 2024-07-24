@@ -42,103 +42,79 @@ public final class io_uring_sq {
 	private static VarHandle ringMaskVarHandle = layout.varHandle(PathElement.groupElement("ring_mask"));
 	private static VarHandle ringEntriesVarHandle = layout.varHandle(PathElement.groupElement("ring_entries"));
 
-	public static long getKhead(MemorySegment data) {
-		return (long) kheadVarHandle.get(data);
+	public static MemorySegment getKhead(MemorySegment data) {
+		return (MemorySegment) kheadVarHandle.get(data);
 	};
 
-	public static long getAcquireKhead(MemorySegment data) {
-		return (long) kheadVarHandle.getAcquire(data);
+	public static MemorySegment getAcquireKhead(MemorySegment data) {
+		return (MemorySegment) kheadVarHandle.getAcquire(data);
 	};
 
-	public static MemorySegment getKheadSegment(MemorySegment data) {
-		return MemorySegment.ofAddress(getKhead(data));
-	};
-
-	public static void setKhead(MemorySegment data, long value) {
+	public static void setKhead(MemorySegment data, MemorySegment value) {
 		kheadVarHandle.set(data, value);
 	};
 
-	public static long getKtail(MemorySegment data) {
-		return (long) ktailVarHandle.get(data);
+	public static MemorySegment getKtail(MemorySegment data) {
+		return (MemorySegment) ktailVarHandle.get(data);
 	};
 
-	public static MemorySegment getKtailSegment(MemorySegment data) {
-		return MemorySegment.ofAddress(getKtail(data));
-	};
-
-	public static void setKtail(MemorySegment data, long value) {
+	public static void setKtail(MemorySegment data, MemorySegment value) {
 		ktailVarHandle.set(data, value);
 	};
 
-	public static void setReleaseKtail(MemorySegment data, long value) {
+	public static void setReleaseKtail(MemorySegment data, MemorySegment value) {
 		ktailVarHandle.setRelease(data, value);
 	};
 
-	public static long getKringMask(MemorySegment data) {
-		return (long) kringMaskVarHandle.get(data);
+	public static MemorySegment getKringMask(MemorySegment data) {
+		return (MemorySegment) kringMaskVarHandle.get(data);
 	};
 
-	public static MemorySegment getKringMaskSegment(MemorySegment data) {
-		return MemorySegment.ofAddress(getKringMask(data));
-	};
-
-	public static void setKringMask(MemorySegment data, long value) {
+	public static void setKringMask(MemorySegment data, MemorySegment value) {
 		kringMaskVarHandle.set(data, value);
 	};
 
-	public static long getKringEntries(MemorySegment data) {
-		return (long) kringEntriesVarHandle.get(data);
+	public static MemorySegment getKringEntries(MemorySegment data) {
+		return (MemorySegment) kringEntriesVarHandle.get(data);
 	};
 
-	public static MemorySegment getKringEntriesSegment(MemorySegment data) {
-		return MemorySegment.ofAddress(getKringEntries(data));
-	};
-
-	public static void setKringEntries(MemorySegment data, long value) {
+	public static void setKringEntries(MemorySegment data, MemorySegment value) {
 		kringEntriesVarHandle.set(data, value);
 	};
 
-	public static long getKflags(MemorySegment data) {
-		return (long) kflagsVarHandle.get(data);
+	public static MemorySegment getKflags(MemorySegment data) {
+		return (MemorySegment) kflagsVarHandle.get(data);
 	};
 
-	public static long getAcquireKflags(MemorySegment data) {
-		return (long) kflagsVarHandle.getAcquire(data);
+	public static MemorySegment getAcquireKflags(MemorySegment data) {
+		return (MemorySegment) kflagsVarHandle.getAcquire(data);
 	};
 
-	public static void setKflags(MemorySegment data, long value) {
+	public static void setKflags(MemorySegment data, MemorySegment value) {
 		kflagsVarHandle.set(data, value);
 	};
 
-	public static long getKdropped(MemorySegment data) {
-		return (long) kdroppedVarHandle.get(data);
+	public static MemorySegment getKdropped(MemorySegment data) {
+		return (MemorySegment) kdroppedVarHandle.get(data);
 	};
 
-	public static void setKdropped(MemorySegment data, long value) {
+	public static void setKdropped(MemorySegment data, MemorySegment value) {
 		kdroppedVarHandle.set(data, value);
 	};
 
-	public static long getArray(MemorySegment data) {
-		return (long) arrayVarHandle.get(data);
+	public static MemorySegment getArray(MemorySegment data) {
+		return (MemorySegment) arrayVarHandle.get(data);
 	};
 
-	public static MemorySegment getArraySegment(MemorySegment data) {
-		return MemorySegment.ofAddress(getArray(data));
-	};
-
-	public static void setArray(MemorySegment data, long value) {
+	public static void setArray(MemorySegment data, MemorySegment value) {
 		arrayVarHandle.set(data, value);
 	};
 
-	public static long getSqes(MemorySegment data) {
-		return (long) sqesVarHandle.get(data);
+	public static MemorySegment getSqes(MemorySegment data) {
+		return (MemorySegment) sqesVarHandle.get(data);
 	};
 
-	public static MemorySegment getSqesSegment(MemorySegment data) {
-		return MemorySegment.ofAddress(getSqes(data));
-	};
-
-	public static void setSqes(MemorySegment data, long value) {
+	public static void setSqes(MemorySegment data, MemorySegment value) {
 		sqesVarHandle.set(data, value);
 	};
 
@@ -166,15 +142,11 @@ public final class io_uring_sq {
 		ringSzVarHandle.set(data, value);
 	};
 
-	public static long getRingPtr(MemorySegment data) {
-		return (long) ringPtrVarHandle.get(data);
+	public static MemorySegment getRingPtr(MemorySegment data) {
+		return (MemorySegment) ringPtrVarHandle.get(data);
 	};
 
-	public static MemorySegment getRingPtrSegment(MemorySegment data) {
-		return MemorySegment.ofAddress(getRingPtr(data));
-	};
-
-	public static void setRingPtr(MemorySegment data, long value) {
+	public static void setRingPtr(MemorySegment data, MemorySegment value) {
 		ringPtrVarHandle.set(data, value);
 	};
 

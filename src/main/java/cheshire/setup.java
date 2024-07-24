@@ -10,51 +10,52 @@ class setup {
 	};
 
 	private static boolean IS_ERR(MemorySegment ptr) {
-		return ptr.address() >= -4095L;
+		return ptr.address() >= constants.EADDRESS;
 	};
 
 	private static void io_uring_setup_ring_pointers(MemorySegment p, MemorySegment sq, MemorySegment cq) {
-		long sqRingPtr = io_uring_sq.getRingPtr(sq);
-		long cqRingPtr = io_uring_cq.getRingPtr(sq);
+		MemorySegment sqRing = io_uring_sq.getRingPtr(sq);
+		MemorySegment cqRing = io_uring_cq.getRingPtr(cq);
 		MemorySegment sqOff = io_uring_params.getSqOffSegment(p);
 		MemorySegment cqOff = io_uring_params.getCqOffSegment(p);
 
-		io_uring_sq.setKhead(sq, sqRingPtr + io_sqring_offsets.getHead(sqOff));
-		io_uring_sq.setKtail(sq, sqRingPtr + io_sqring_offsets.getTail(sqOff));
-		io_uring_sq.setKringMask(sq, sqRingPtr + io_sqring_offsets.getRingMask(sqOff));
-		io_uring_sq.setKringEntries(sq, sqRingPtr + io_sqring_offsets.getRingEntries(sqOff));
-		io_uring_sq.setKflags(sq, sqRingPtr + io_sqring_offsets.getFlags(sqOff));
-		io_uring_sq.setKdropped(sq, sqRingPtr + io_sqring_offsets.getDropped(sqOff));
+		io_uring_sq.setKhead(sq, utils.getSegmentWithOffset(sqRing, io_sqring_offsets.getHead(sqOff)));
+		io_uring_sq.setKtail(sq, utils.getSegmentWithOffset(sqRing, io_sqring_offsets.getTail(sqOff)));
+		io_uring_sq.setKringMask(sq, utils.getSegmentWithOffset(sqRing, io_sqring_offsets.getRingMask(sqOff)));
+		io_uring_sq.setKringEntries(sq, utils.getSegmentWithOffset(sqRing, io_sqring_offsets.getRingEntries(sqOff)));
+		io_uring_sq.setKflags(sq, utils.getSegmentWithOffset(sqRing, io_sqring_offsets.getFlags(sqOff)));
+		io_uring_sq.setKdropped(sq, utils.getSegmentWithOffset(sqRing, io_sqring_offsets.getDropped(sqOff)));
 		if ((io_uring_params.getFlags(p) & constants.IORING_SETUP_NO_SQARRAY) == 0) {
-			io_uring_sq.setArray(sq, sqRingPtr + io_sqring_offsets.getArray(sqOff));
+			io_uring_sq.setArray(sq, utils.getSegmentWithOffset(sqRing, io_sqring_offsets.getDropped(sqOff)));
 		}
 
-		io_uring_cq.setKhead(cq, cqRingPtr + io_cqring_offsets.getHead(cqOff));
-		io_uring_cq.setKtail(cq, cqRingPtr + io_cqring_offsets.getTail(cqOff));
-		io_uring_cq.setKringMask(cq, cqRingPtr + io_cqring_offsets.getRingMask(cqOff));
-		io_uring_cq.setKringEntries(cq, cqRingPtr + io_cqring_offsets.getRingEntries(cqOff));
-		io_uring_cq.setKoverflow(cq, cqRingPtr + io_cqring_offsets.getOverflow(cqOff));
-		io_uring_cq.setCqes(cq, cqRingPtr + io_cqring_offsets.getCqes(cqOff));
+		io_uring_cq.setKhead(cq, utils.getSegmentWithOffset(cqRing, io_cqring_offsets.getHead(cqOff)));
+		io_uring_cq.setKtail(cq, utils.getSegmentWithOffset(cqRing, io_cqring_offsets.getTail(cqOff)));
+		io_uring_cq.setKringMask(cq, utils.getSegmentWithOffset(cqRing, io_cqring_offsets.getRingMask(cqOff)));
+		io_uring_cq.setKringEntries(cq, utils.getSegmentWithOffset(cqRing, io_cqring_offsets.getRingEntries(cqOff)));
+		io_uring_cq.setKoverflow(cq, utils.getSegmentWithOffset(cqRing, io_cqring_offsets.getOverflow(cqOff)));
+		io_uring_cq.setCqes(cq, utils.getSegmentWithOffset(cqRing, io_cqring_offsets.getCqes(cqOff)));
 		if (io_cqring_offsets.getFlags(p) != 0) {
-			io_uring_cq.setKflags(cq, cqRingPtr + io_cqring_offsets.getFlags(cqOff));
+			io_uring_cq.setKflags(cq, utils.getSegmentWithOffset(cqRing, io_cqring_offsets.getFlags(cqOff)));
 		}
 
-		io_uring_sq.setRingMask(sq, utils.getIntFromSegment(io_uring_sq.getKringMaskSegment(sq)));
-		io_uring_sq.setRingEntries(sq, utils.getIntFromSegment(io_uring_sq.getKringEntriesSegment(sq)));
-		io_uring_cq.setRingMask(cq, utils.getIntFromSegment(io_uring_cq.getKringMaskSegment(cq)));
-		io_uring_cq.setRingEntries(cq, utils.getIntFromSegment(io_uring_cq.getKringEntriesSegment(cq)));
+		io_uring_sq.setRingMask(sq, utils.getIntFromSegment(io_uring_sq.getKringMask(sq)));
+		io_uring_sq.setRingEntries(sq, utils.getIntFromSegment(io_uring_sq.getKringEntries(sq)));
+		io_uring_cq.setRingMask(cq, utils.getIntFromSegment(io_uring_cq.getKringMask(cq)));
+		io_uring_cq.setRingEntries(cq, utils.getIntFromSegment(io_uring_cq.getKringEntries(cq)));
 	};
 
 	private static void io_uring_unmap_rings(MemorySegment sq, MemorySegment cq) {
 		long sqRingSz = io_uring_sq.getRingSz(sq);
-		long sqRingPtr = io_uring_sq.getRingPtr(sq);
+		MemorySegment sqRingPtr = io_uring_sq.getRingPtr(sq);
 
 		long cqRingSz = io_uring_cq.getRingSz(cq);
-		long cqRingPtr = io_uring_cq.getRingPtr(cq);
+		MemorySegment cqRingPtr = io_uring_cq.getRingPtr(cq);
 
 		if (sqRingSz != 0)
 			syscall.__sys_munmap(sqRingPtr, sqRingSz);
-		if (cqRingPtr != 0 && cqRingSz != 0 && cqRingPtr != sqRingPtr)
+		if (!utils.areSegmentsEquals(cqRingPtr, MemorySegment.NULL) && cqRingSz != 0
+				&& !utils.areSegmentsEquals(cqRingPtr, sqRingPtr))
 			syscall.__sys_munmap(cqRingPtr, cqRingSz);
 	};
 
@@ -85,22 +86,22 @@ class setup {
 			}
 			io_uring_cq.setRingSz(cq, sqRingSz);
 		}
-		io_uring_sq.setRingPtr(sq,
-				syscall.__sys_mmap(MemorySegment.NULL, io_uring_sq.getRingSz(sq),
-						constants.PROT_READ | constants.PROT_WRITE,
-						constants.MAP_SHARED | constants.MAP_POPULATE, fd, constants.IORING_OFF_SQ_RING).address());
-		MemorySegment sqRingPtr = io_uring_sq.getRingPtrSegment(sq); // only address needed
-		if (IS_ERR(sqRingPtr))
-			return PTR_ERR(sqRingPtr);
+		MemorySegment ringPtr1 = syscall.__sys_mmap(MemorySegment.NULL, io_uring_sq.getRingSz(sq),
+				constants.PROT_READ | constants.PROT_WRITE, constants.MAP_SHARED | constants.MAP_POPULATE, fd,
+				constants.IORING_OFF_SQ_RING);
+		io_uring_sq.setRingPtr(sq, ringPtr1);
+		if (IS_ERR(ringPtr1)) {
+			return PTR_ERR(ringPtr1);
+		}
 
 		if ((features & constants.IORING_FEAT_SINGLE_MMAP) != 0) {
 			io_uring_cq.setRingPtr(cq, io_uring_sq.getRingPtr(sq));
 		} else {
-			io_uring_cq.setRingPtr(sq,
-					syscall.__sys_mmap(MemorySegment.NULL, io_uring_cq.getRingSz(cq),
-							constants.PROT_READ | constants.PROT_WRITE,
-							constants.MAP_SHARED | constants.MAP_POPULATE, fd, constants.IORING_OFF_CQ_RING).address());
-			MemorySegment cqRingPtr = io_uring_cq.getRingPtrSegment(cq); // only address needed
+			MemorySegment ringPtr2 = syscall.__sys_mmap(MemorySegment.NULL, io_uring_cq.getRingSz(cq),
+					constants.PROT_READ | constants.PROT_WRITE, constants.MAP_SHARED | constants.MAP_POPULATE, fd,
+					constants.IORING_OFF_CQ_RING);
+			io_uring_cq.setRingPtr(sq, ringPtr2);
+			MemorySegment cqRingPtr = io_uring_cq.getRingPtr(cq);
 			if (IS_ERR(cqRingPtr)) {
 				ret = PTR_ERR(cqRingPtr);
 				io_uring_cq.ringPtrVarHandle.set(cq, MemorySegment.NULL); // Should be NULL
@@ -116,9 +117,9 @@ class setup {
 		io_uring_sq.setSqes(sq,
 				syscall.__sys_mmap(MemorySegment.NULL, size * io_uring_params.getSqEntries(p),
 						constants.PROT_READ | constants.PROT_WRITE, constants.MAP_SHARED | constants.MAP_POPULATE, fd,
-						constants.IORING_OFF_SQES).address()); // MemorySegment 0
+						constants.IORING_OFF_SQES)); // MemorySegment 0
 
-		MemorySegment sqSqes = io_uring_sq.getSqesSegment(sq); // only address needed
+		MemorySegment sqSqes = io_uring_sq.getSqes(sq);
 		if (IS_ERR(sqSqes)) {
 			ret = PTR_ERR(sqSqes);
 			io_uring_unmap_rings(sq, cq);
@@ -193,13 +194,9 @@ class setup {
 	/* FIXME */
 	private static long hugePageSize = 2 * 1024 * 1024;
 
-	private static long get_page_size() {
-		return 4096; // TODO
-	};
-
 	private static int io_uring_alloc_huge(int entries, MemorySegment p, MemorySegment sq, MemorySegment cq,
 			MemorySegment buf, long bufSize) {
-		long pageSize = get_page_size();
+		long pageSize = syscall.get_page_size();
 		long ringMem, sqesMem = 0;
 		long memUsed = 0;
 		MemorySegment ptr;
@@ -250,9 +247,9 @@ class setup {
 			}
 		}
 
-		io_uring_sq.setSqes(sq, ptr.address());
+		io_uring_sq.setSqes(sq, ptr);
 		if (memUsed <= bufSize) {
-			io_uring_sq.setRingPtr(sq, io_uring_sq.getSqes(sq) + sqesMem);
+			io_uring_sq.setRingPtr(sq, utils.getSegmentWithOffset(io_uring_sq.getSqes(sq), sqesMem));
 			io_uring_cq.setRingSz(cq, 0L);
 			io_uring_sq.setRingSz(sq, 0L);
 		} else {
@@ -266,11 +263,10 @@ class setup {
 			ptr = syscall.__sys_mmap(MemorySegment.NULL, bufSize, constants.PROT_READ | constants.PROT_WRITE,
 					constants.MAP_SHARED | constants.MAP_ANONYMOUS | mapHugetlb, -1, 0);
 			if (IS_ERR(ptr)) {
-				long sqes = io_uring_sq.getSqes(sq);
-				syscall.__sys_munmap(sqes, 1);
+				syscall.__sys_munmap(io_uring_sq.getSqes(sq), 1);
 				return PTR_ERR(ptr);
 			}
-			io_uring_sq.setRingPtr(sq, ptr.address());
+			io_uring_sq.setRingPtr(sq, ptr);
 			io_uring_sq.setRingSz(sq, bufSize);
 			io_uring_cq.setRingSz(cq, 0);
 		}
@@ -278,8 +274,8 @@ class setup {
 		io_uring_cq.setRingPtr(cq, io_uring_sq.getRingPtr(sq));
 		MemorySegment sqOff = io_uring_params.getSqOffSegment(p);
 		MemorySegment cqOff = io_uring_params.getCqOffSegment(p);
-		io_sqring_offsets.setUserAddr(sqOff, io_uring_sq.getSqes(sq));
-		io_cqring_offsets.setUserAddr(cqOff, io_uring_sq.getRingPtr(sq));
+		io_sqring_offsets.setUserAddr(sqOff, io_uring_sq.getSqes(sq).address());
+		io_cqring_offsets.setUserAddr(cqOff, io_uring_sq.getRingPtr(sq).address());
 		return (int) memUsed;
 	};
 
@@ -330,9 +326,7 @@ class setup {
 
 		if ((flags & constants.IORING_SETUP_NO_SQARRAY) == 0) {
 			int sqEntries = io_uring_sq.getRingEntries(sq);
-			MemorySegment sqArray = io_uring_sq.getArraySegment(sq)
-					.reinterpret(sqEntries * ValueLayout.JAVA_INT.byteSize()); // Enough?
-
+			MemorySegment sqArray = io_uring_sq.getArray(sq);
 			for (int index = 0; index < sqEntries; index++) {
 				sqArray.setAtIndex(ValueLayout.JAVA_INT, index, index);
 			}
@@ -376,7 +370,7 @@ class setup {
 		MemorySegment cq = io_uring.getCqSegment(ring);
 		long sqeSize;
 
-		long sqes = io_uring_sq.getSqes(sq);
+		MemorySegment sqes = io_uring_sq.getSqes(sq);
 		if (io_uring_sq.getRingSz(sq) == 0) {
 			sqeSize = io_uring_sqe.layout.byteSize();
 			if ((io_uring.getFlags(ring) & constants.IORING_SETUP_SQE128) != 0) {
@@ -387,7 +381,7 @@ class setup {
 			io_uring_unmap_rings(sq, cq);
 		} else {
 			if ((io_uring.getIntFlags(ring) & constants.INT_FLAG_APP_MEM) == 0) {
-				long kringEntries = io_uring_sq.getKringEntries(sq);
+				long kringEntries = utils.getLongFromSegment(io_uring_sq.getKringEntries(sq));
 				syscall.__sys_munmap(sqes, kringEntries * io_uring_sqe.layout.byteSize());
 				io_uring_unmap_rings(sq, cq);
 			}
