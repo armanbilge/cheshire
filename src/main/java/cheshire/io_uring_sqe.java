@@ -24,7 +24,9 @@ public final class io_uring_sqe {
 			ValueLayout.JAVA_CHAR.withName("opcode"),
 			ValueLayout.JAVA_CHAR.withName("flags"),
 			ValueLayout.JAVA_SHORT.withName("ioprio"),
+			MemoryLayout.paddingLayout(2),
 			ValueLayout.JAVA_INT.withName("fd"),
+			MemoryLayout.paddingLayout(4),
 			MemoryLayout.unionLayout(
 					ValueLayout.JAVA_LONG.withName("off"),
 					ValueLayout.JAVA_LONG.withName("addr2"),
@@ -42,20 +44,33 @@ public final class io_uring_sqe {
 							.withName("$anon$46:3"))
 					.withName("$anon$43:2"),
 			ValueLayout.JAVA_INT.withName("len"),
+			MemoryLayout.paddingLayout(4),
 			MemoryLayout.unionLayout(
 					ValueLayout.JAVA_INT.withName("rw_flags"),
-					ValueLayout.JAVA_INT.withName("fsync_flags"), ValueLayout.JAVA_SHORT.withName("poll_events"),
-					ValueLayout.JAVA_INT.withName("poll32_events"), ValueLayout.JAVA_INT.withName("sync_range_flags"),
-					ValueLayout.JAVA_INT.withName("msg_flags"), ValueLayout.JAVA_INT.withName("timeout_flags"),
-					ValueLayout.JAVA_INT.withName("accept_flags"), ValueLayout.JAVA_INT.withName("cancel_flags"),
-					ValueLayout.JAVA_INT.withName("open_flags"), ValueLayout.JAVA_INT.withName("statx_flags"),
-					ValueLayout.JAVA_INT.withName("fadvise_advice"), ValueLayout.JAVA_INT.withName("splice_flags"),
-					ValueLayout.JAVA_INT.withName("rename_flags"), ValueLayout.JAVA_INT.withName("unlink_flags"),
-					ValueLayout.JAVA_INT.withName("hardlink_flags"), ValueLayout.JAVA_INT.withName("xattr_flags"),
-					ValueLayout.JAVA_INT.withName("msg_ring_flags"), ValueLayout.JAVA_INT.withName("uring_cmd_flags"),
-					ValueLayout.JAVA_INT.withName("waitid_flags"), ValueLayout.JAVA_INT.withName("futex_flags"),
-					ValueLayout.JAVA_INT.withName("install_fd_flags"), ValueLayout.JAVA_INT.withName("nop_flags"))
+					ValueLayout.JAVA_INT.withName("fsync_flags"),
+					ValueLayout.JAVA_SHORT.withName("poll_events"),
+					ValueLayout.JAVA_INT.withName("poll32_events"),
+					ValueLayout.JAVA_INT.withName("sync_range_flags"),
+					ValueLayout.JAVA_INT.withName("msg_flags"),
+					ValueLayout.JAVA_INT.withName("timeout_flags"),
+					ValueLayout.JAVA_INT.withName("accept_flags"),
+					ValueLayout.JAVA_INT.withName("cancel_flags"),
+					ValueLayout.JAVA_INT.withName("open_flags"),
+					ValueLayout.JAVA_INT.withName("statx_flags"),
+					ValueLayout.JAVA_INT.withName("fadvise_advice"),
+					ValueLayout.JAVA_INT.withName("splice_flags"),
+					ValueLayout.JAVA_INT.withName("rename_flags"),
+					ValueLayout.JAVA_INT.withName("unlink_flags"),
+					ValueLayout.JAVA_INT.withName("hardlink_flags"),
+					ValueLayout.JAVA_INT.withName("xattr_flags"),
+					ValueLayout.JAVA_INT.withName("msg_ring_flags"),
+					ValueLayout.JAVA_INT.withName("uring_cmd_flags"),
+					ValueLayout.JAVA_INT.withName("waitid_flags"),
+					ValueLayout.JAVA_INT.withName("futex_flags"),
+					ValueLayout.JAVA_INT.withName("install_fd_flags"),
+					ValueLayout.JAVA_INT.withName("nop_flags"))
 					.withName("$anon$52:2"),
+			MemoryLayout.paddingLayout(4),
 			ValueLayout.JAVA_LONG.withName("user_data"),
 			MemoryLayout.unionLayout(
 					ValueLayout.JAVA_SHORT.withName("buf_index"),
@@ -83,20 +98,16 @@ public final class io_uring_sqe {
 	private static VarHandle flagsVarHandle = layout.varHandle(PathElement.groupElement("flags"));
 	private static VarHandle ioprioVarHandle = layout.varHandle(PathElement.groupElement("ioprio"));
 	private static VarHandle fdVarHandle = layout.varHandle(PathElement.groupElement("fd"));
-	private static VarHandle offVarHandle = layout.varHandle(PathElement.groupElement("off"));
-	private static VarHandle addrVarHandle = layout.varHandle(PathElement.groupElement("addr"));
+	private static long offOffset = layout.byteOffset(PathElement.groupElement("fd")) + 8;
+	private static long addrOffset = layout.byteOffset(PathElement.groupElement("len")) - 8;
 	private static VarHandle lenVarHandle = layout.varHandle(PathElement.groupElement("len"));
-	private static VarHandle rwFlagsVarHandle = layout.varHandle(PathElement.groupElement("rw_flags"));
-	private static VarHandle msgFlagsVarHandle = layout.varHandle(PathElement.groupElement("msg_flags"));
-	private static VarHandle timeoutFlagsVarHandle = layout.varHandle(PathElement.groupElement("timeout_flags"));
-	private static VarHandle acceptFlagsVarHandle = layout.varHandle(PathElement.groupElement("accept_flags"));
-	private static VarHandle cancelFlagsVarHandle = layout.varHandle(PathElement.groupElement("cancel_flags"));
+	private static long anon522Offset = layout.byteOffset(PathElement.groupElement("len")) + 8;
 	private static VarHandle userDataVarHandle = layout.varHandle(PathElement.groupElement("user_data"));
-	private static VarHandle bufIndexVarHandle = layout.varHandle(PathElement.groupElement("buf_index"));
+	private static long bufIndexOffset = layout.byteOffset(PathElement.groupElement("user_data")) + 8;
 	private static VarHandle personalityVarHandle = layout.varHandle(PathElement.groupElement("personality"));
-	private static VarHandle fileIndexVarHandle = layout.varHandle(PathElement.groupElement("file_index"));
-	private static VarHandle addr3VarHandle = layout.varHandle(PathElement.groupElement("addr3"));
-	private static VarHandle pad2VarHandle = layout.varHandle(PathElement.groupElement("__pad2"));
+	private static long fileIndexOffset = layout.byteOffset(PathElement.groupElement("personality")) + 2;
+	private static long addr3Offset = layout.byteOffset(PathElement.groupElement("personality")) + 6;
+	private static long pad2Offset = layout.byteOffset(PathElement.groupElement("personality")) + 14;
 
 	public static char getOpcode(MemorySegment data) {
 		return (char) opcodeVarHandle.get(data);
@@ -131,19 +142,19 @@ public final class io_uring_sqe {
 	};
 
 	public static long getOff(MemorySegment data) {
-		return (long) offVarHandle.get(data);
+		return (long) data.get(ValueLayout.JAVA_LONG, offOffset);
 	};
 
 	public static void setOff(MemorySegment data, long value) {
-		offVarHandle.set(data, value);
+		data.set(ValueLayout.JAVA_LONG, offOffset, value);
 	};
 
 	public static long getAddr(MemorySegment data) {
-		return (long) addrVarHandle.get(data);
+		return (long) data.get(ValueLayout.JAVA_LONG, addrOffset);
 	};
 
 	public static void setAddr(MemorySegment data, long value) {
-		addrVarHandle.set(data, value);
+		data.set(ValueLayout.JAVA_LONG, addrOffset, value);
 	};
 
 	public static int getLen(MemorySegment data) {
@@ -155,43 +166,43 @@ public final class io_uring_sqe {
 	};
 
 	public static int getRwFlags(MemorySegment data) {
-		return (int) rwFlagsVarHandle.get(data);
+		return (int) data.get(ValueLayout.JAVA_INT, anon522Offset);
 	};
 
 	public static void setRwFlags(MemorySegment data, int value) {
-		rwFlagsVarHandle.set(data, value);
+		data.set(ValueLayout.JAVA_INT, anon522Offset, value);
 	};
 
 	public static int getMsgFlags(MemorySegment data) {
-		return (int) msgFlagsVarHandle.get(data);
+		return (int) data.get(ValueLayout.JAVA_INT, anon522Offset);
 	};
 
 	public static void setMsgFlags(MemorySegment data, int value) {
-		msgFlagsVarHandle.set(data, value);
+		data.set(ValueLayout.JAVA_INT, anon522Offset, value);
 	};
 
 	public static int getTimeoutFlags(MemorySegment data) {
-		return (int) timeoutFlagsVarHandle.get(data);
+		return (int) data.get(ValueLayout.JAVA_INT, anon522Offset);
 	};
 
 	public static void setTimeoutFlags(MemorySegment data, int value) {
-		timeoutFlagsVarHandle.set(data, value);
+		data.set(ValueLayout.JAVA_INT, anon522Offset, value);
 	};
 
 	public static int getAcceptFlags(MemorySegment data) {
-		return (int) acceptFlagsVarHandle.get(data);
+		return (int) data.get(ValueLayout.JAVA_INT, anon522Offset);
 	};
 
 	public static void setAcceptFlags(MemorySegment data, int value) {
-		acceptFlagsVarHandle.set(data, value);
+		data.set(ValueLayout.JAVA_INT, anon522Offset, value);
 	};
 
 	public static int getCancelFlags(MemorySegment data) {
-		return (int) cancelFlagsVarHandle.get(data);
+		return (int) data.get(ValueLayout.JAVA_INT, anon522Offset);
 	};
 
 	public static void setCancelFlags(MemorySegment data, int value) {
-		cancelFlagsVarHandle.set(data, value);
+		data.set(ValueLayout.JAVA_INT, anon522Offset, value);
 	};
 
 	public static long getUserData(MemorySegment data) {
@@ -203,11 +214,11 @@ public final class io_uring_sqe {
 	};
 
 	public static short getBufIndex(MemorySegment data) {
-		return (short) bufIndexVarHandle.get(data);
+		return (short) data.get(ValueLayout.JAVA_SHORT, bufIndexOffset);
 	};
 
 	public static void setBufIndex(MemorySegment data, short value) {
-		bufIndexVarHandle.set(data, value);
+		data.set(ValueLayout.JAVA_SHORT, bufIndexOffset, value);
 	};
 
 	public static short getPersonality(MemorySegment data) {
@@ -219,27 +230,27 @@ public final class io_uring_sqe {
 	};
 
 	public static int getFileIndex(MemorySegment data) {
-		return (int) fileIndexVarHandle.get(data);
+		return (int) data.get(ValueLayout.JAVA_INT, fileIndexOffset);
 	};
 
 	public static void setFileIndex(MemorySegment data, int value) {
-		fileIndexVarHandle.set(data, value);
+		data.set(ValueLayout.JAVA_INT, fileIndexOffset, value);
 	};
 
 	public static long getAddr3(MemorySegment data) {
-		return (long) addr3VarHandle.get(data);
+		return (long) data.get(ValueLayout.JAVA_LONG, addr3Offset);
 	};
 
 	public static void setAddr3(MemorySegment data, long value) {
-		addr3VarHandle.set(data, value);
+		data.set(ValueLayout.JAVA_LONG, addr3Offset, value);
 	};
 
 	public static long getPad2(MemorySegment data) {
-		return (long) pad2VarHandle.get(data);
+		return (long) data.get(ValueLayout.JAVA_LONG, pad2Offset);
 	};
 
 	public static void setPad2(MemorySegment data, long value) {
-		pad2VarHandle.set(data, value);
+		data.set(ValueLayout.JAVA_LONG, pad2Offset, value);
 	};
 
 };

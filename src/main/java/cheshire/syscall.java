@@ -63,7 +63,7 @@ class syscall {
 
 	public static int __sys_io_uring_register(int fd, int opcode, MemorySegment arg, int nrArgs) {
 		try {
-			int ret = (int) syscall5().invokeExact(constants.__NR_io_uring_register, fd, opcode, arg.address(), nrArgs);
+			int ret = (int) syscall5().invokeExact(constants.__NR_io_uring_register, fd, opcode, arg, nrArgs);
 			if (ret < 0) {
 				throw new RuntimeException("io_uring_register syscall failed");
 			}
@@ -75,7 +75,7 @@ class syscall {
 
 	public static int __sys_io_uring_setup(int entries, MemorySegment p) {
 		try {
-			int ret = (int) syscall3().invokeExact(constants.__NR_io_uring_setup, entries, p.address());
+			int ret = (int) syscall3().invokeExact(constants.__NR_io_uring_setup, entries, p);
 			if (ret < 0) {
 				throw new RuntimeException("io_uring_setup syscall failed");
 			}
@@ -129,7 +129,7 @@ class syscall {
 
 	public static MemorySegment __sys_mmap(MemorySegment addr, long length, int prot, int flags, int fd, long offset) {
 		try {
-			MemorySegment ret = (MemorySegment) mmap().invokeExact(addr.address(), length, prot, flags, fd, offset);
+			MemorySegment ret = (MemorySegment) mmap().invokeExact(addr, length, prot, flags, fd, offset);
 			if (ret.address() == constants.MAP_FAILED) {
 				throw new RuntimeException("mmap syscall failed");
 			}

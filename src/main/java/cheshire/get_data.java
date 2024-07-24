@@ -13,8 +13,10 @@ public class get_data {
 			ValueLayout.JAVA_INT.withName("submit"),
 			ValueLayout.JAVA_INT.withName("wait_nr"),
 			ValueLayout.JAVA_INT.withName("get_flags"),
+			MemoryLayout.paddingLayout(4),
 			ValueLayout.JAVA_LONG.withName("sz"),
 			ValueLayout.JAVA_BOOLEAN.withName("has_ts"),
+			MemoryLayout.paddingLayout(7),
 			ValueLayout.ADDRESS.withName("arg"))
 			.withName("get_data");
 
