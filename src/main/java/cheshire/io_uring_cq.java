@@ -37,11 +37,11 @@ public final class io_uring_cq {
 	private static VarHandle ringEntriesVarHandle = layout.varHandle(PathElement.groupElement("ring_entries"));
 
 	public static MemorySegment getKhead(MemorySegment data) {
-		return (MemorySegment) kheadVarHandle.get(data);
+		return utils.getIntReinterpreted(kheadVarHandle.get(data));
 	};
 
 	public static MemorySegment getAcquireKhead(MemorySegment data) {
-		return (MemorySegment) kheadVarHandle.getAcquire(data);
+		return utils.getIntReinterpreted(kheadVarHandle.getAcquire(data));
 	};
 
 	public static void setKhead(MemorySegment data, MemorySegment value) {
@@ -53,11 +53,11 @@ public final class io_uring_cq {
 	};
 
 	public static MemorySegment getKtail(MemorySegment data) {
-		return (MemorySegment) ktailVarHandle.get(data);
+		return utils.getIntReinterpreted(ktailVarHandle.get(data));
 	};
 
 	public static MemorySegment getAcquireKtail(MemorySegment data) {
-		return (MemorySegment) ktailVarHandle.getAcquire(data);
+		return utils.getIntReinterpreted(ktailVarHandle.getAcquire(data));
 	};
 
 	public static void setKtail(MemorySegment data, MemorySegment value) {
@@ -69,7 +69,7 @@ public final class io_uring_cq {
 	};
 
 	public static MemorySegment getKringMask(MemorySegment data) {
-		return (MemorySegment) kringMaskVarHandle.get(data);
+		return utils.getIntReinterpreted(kringMaskVarHandle.get(data));
 	};
 
 	public static void setKringMask(MemorySegment data, MemorySegment value) {
@@ -77,7 +77,7 @@ public final class io_uring_cq {
 	};
 
 	public static MemorySegment getKringEntries(MemorySegment data) {
-		return (MemorySegment) kringEntriesVarHandle.get(data);
+		return utils.getIntReinterpreted(kringEntriesVarHandle.get(data));
 	};
 
 	public static void setKringEntries(MemorySegment data, MemorySegment value) {
@@ -85,7 +85,7 @@ public final class io_uring_cq {
 	};
 
 	public static MemorySegment getKflags(MemorySegment data) {
-		return (MemorySegment) kflagsVarHandle.get(data);
+		return utils.getIntReinterpreted(kflagsVarHandle.get(data));
 	};
 
 	public static void setKflags(MemorySegment data, MemorySegment value) {
@@ -93,7 +93,7 @@ public final class io_uring_cq {
 	};
 
 	public static MemorySegment getKoverflow(MemorySegment data) {
-		return (MemorySegment) koverflowVarHandle.get(data);
+		return utils.getIntReinterpreted(koverflowVarHandle.get(data));
 	};
 
 	public static void setKoverflow(MemorySegment data, MemorySegment value) {
@@ -101,7 +101,7 @@ public final class io_uring_cq {
 	};
 
 	public static MemorySegment getCqes(MemorySegment data) {
-		return (MemorySegment) cqesVarHandle.get(data);
+		return (MemorySegment) cqesVarHandle.get(data); // Reinterpreted when used
 	};
 
 	public static void setCqes(MemorySegment data, MemorySegment value) {
@@ -117,7 +117,7 @@ public final class io_uring_cq {
 	};
 
 	public static MemorySegment getRingPtr(MemorySegment data) {
-		return (MemorySegment) ringPtrVarHandle.get(data);
+		return (MemorySegment) ringPtrVarHandle.get(data); // needs reinterpret?
 	};
 
 	public static void setRingPtr(MemorySegment data, MemorySegment value) {

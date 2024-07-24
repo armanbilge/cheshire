@@ -14,16 +14,12 @@ public class utils {
 		return (s1.address() == s2.address()) && (s1.byteSize() == s2.byteSize());
 	};
 
-	public static int getIntFromSegment(MemorySegment s) {
-		return s.reinterpret(ValueLayout.JAVA_INT.byteSize()).get(ValueLayout.JAVA_INT, 0);
-	};
-
-	public static long getLongFromSegment(MemorySegment s) {
-		return s.reinterpret(ValueLayout.JAVA_LONG.byteSize()).get(ValueLayout.JAVA_LONG, 0);
-	};
-
 	public static MemorySegment getSegmentWithOffset(MemorySegment s, long off) {
 		return MemorySegment.ofAddress(s.address() + off).reinterpret(s.byteSize());
+	};
+
+	public static MemorySegment getIntReinterpreted(Object o) {
+		return ((MemorySegment) o).reinterpret(ValueLayout.JAVA_INT.byteSize());
 	};
 
 };

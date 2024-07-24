@@ -39,10 +39,10 @@ class setup {
 			io_uring_cq.setKflags(cq, utils.getSegmentWithOffset(cqRing, io_cqring_offsets.getFlags(cqOff)));
 		}
 
-		io_uring_sq.setRingMask(sq, utils.getIntFromSegment(io_uring_sq.getKringMask(sq)));
-		io_uring_sq.setRingEntries(sq, utils.getIntFromSegment(io_uring_sq.getKringEntries(sq)));
-		io_uring_cq.setRingMask(cq, utils.getIntFromSegment(io_uring_cq.getKringMask(cq)));
-		io_uring_cq.setRingEntries(cq, utils.getIntFromSegment(io_uring_cq.getKringEntries(cq)));
+		io_uring_sq.setRingMask(sq, io_uring_sq.getKringMask(sq).get(ValueLayout.JAVA_INT, 0L));
+		io_uring_sq.setRingEntries(sq, io_uring_sq.getKringEntries(sq).get(ValueLayout.JAVA_INT, 0L));
+		io_uring_cq.setRingMask(cq, io_uring_cq.getKringMask(cq).get(ValueLayout.JAVA_INT, 0L));
+		io_uring_cq.setRingEntries(cq, io_uring_cq.getKringEntries(cq).get(ValueLayout.JAVA_INT, 0L));
 	};
 
 	private static void io_uring_unmap_rings(MemorySegment sq, MemorySegment cq) {
@@ -119,7 +119,7 @@ class setup {
 						constants.PROT_READ | constants.PROT_WRITE, constants.MAP_SHARED | constants.MAP_POPULATE, fd,
 						constants.IORING_OFF_SQES)); // MemorySegment 0
 
-		MemorySegment sqSqes = io_uring_sq.getSqes(sq);
+		MemorySegment sqSqes = io_uring_sq.getSqes(sq); // only need address
 		if (IS_ERR(sqSqes)) {
 			ret = PTR_ERR(sqSqes);
 			io_uring_unmap_rings(sq, cq);
@@ -326,7 +326,7 @@ class setup {
 
 		if ((flags & constants.IORING_SETUP_NO_SQARRAY) == 0) {
 			int sqEntries = io_uring_sq.getRingEntries(sq);
-			MemorySegment sqArray = io_uring_sq.getArray(sq);
+			MemorySegment sqArray = io_uring_sq.getArray(sq).reinterpret(sqEntries * ValueLayout.JAVA_INT.byteSize()); // Enough?;
 			for (int index = 0; index < sqEntries; index++) {
 				sqArray.setAtIndex(ValueLayout.JAVA_INT, index, index);
 			}
@@ -381,7 +381,7 @@ class setup {
 			io_uring_unmap_rings(sq, cq);
 		} else {
 			if ((io_uring.getIntFlags(ring) & constants.INT_FLAG_APP_MEM) == 0) {
-				long kringEntries = utils.getLongFromSegment(io_uring_sq.getKringEntries(sq));
+				int kringEntries = io_uring_sq.getKringEntries(sq).get(ValueLayout.JAVA_INT, 0L);
 				syscall.__sys_munmap(sqes, kringEntries * io_uring_sqe.layout.byteSize());
 				io_uring_unmap_rings(sq, cq);
 			}

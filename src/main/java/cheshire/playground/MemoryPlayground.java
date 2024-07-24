@@ -18,12 +18,19 @@ public class MemoryPlayground {
 				pointLayout.withName("start"),
 				pointLayout.withName("end"));
 
+		GroupLayout addrTestLayout = MemoryLayout.structLayout(
+				ValueLayout.ADDRESS.withName("point"));
+
 		VarHandle xvarHandle = pointLayout.varHandle(PathElement.groupElement("x"));
 		VarHandle yvarHandle = pointLayout.varHandle(PathElement.groupElement("y"));
+
+		VarHandle addrPointvarHandle = addrTestLayout.varHandle(PathElement.groupElement("point"));
 
 		try (Arena memorySession = Arena.ofConfined()) {
 			// Set values
 			MemorySegment pointSegment = memorySession.allocate(pointLayout);
+			MemorySegment addrTest = memorySession.allocate(addrTestLayout);
+
 			xvarHandle.set(pointSegment, 3d);
 			yvarHandle.set(pointSegment, 4d);
 			System.out.println("Point 1 - " + pointSegment.toString());
@@ -37,6 +44,8 @@ public class MemoryPlayground {
 			yvarHandle.set(start, 2d);
 			xvarHandle.set(end, 5d);
 			yvarHandle.set(end, 6d);
+
+			addrPointvarHandle.set(addrTest, pointSegment);
 
 			System.out.println("Line - " + lineSegment.toString());
 
@@ -54,6 +63,11 @@ public class MemoryPlayground {
 			MemorySegment endPoint = lineSegment.asSlice(lineLayout.byteOffset(PathElement.groupElement("end")), pointLayout);
 			System.out.println("Line end point - " + endPoint.toString());
 			System.out.println("Line end point X - " + xvarHandle.get(endPoint));
+
+			// MemorySegment pointAddr = (MemorySegment) addrPointvarHandle.get(addrTest);
+			MemorySegment pointAddr = ((MemorySegment) addrPointvarHandle.get(addrTest)).reinterpret(pointLayout.byteSize());
+			System.out.println("Point Addr - " + pointAddr.toString());
+			System.out.println("Point Addrx - " + xvarHandle.get(pointAddr));
 
 			// Comparing segments
 			System.out.println("Point 1 == Point 2 - " + (pointSegment == pointSegment2)); // false

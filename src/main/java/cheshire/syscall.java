@@ -138,7 +138,7 @@ class syscall {
 			if (ret.address() == constants.MAP_FAILED) {
 				throw new RuntimeException("mmap syscall failed");
 			}
-			return MemorySegment.ofAddress(ret.address()).reinterpret(length);
+			return ret.reinterpret(length);
 		} catch (Throwable cause) {
 			throw new RuntimeException(cause);
 		}

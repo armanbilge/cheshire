@@ -46,8 +46,8 @@ public final class liburing {
 		}
 		MemorySegment cqe = ring_allocations.getCqeSegment(ring.allocations);
 		do {
-			int tail = utils.getIntFromSegment(io_uring_cq.getAcquireKtail(cq));
-			int head = utils.getIntFromSegment(io_uring_cq.getKhead(cq));
+			int tail = io_uring_cq.getAcquireKtail(cq).get(ValueLayout.JAVA_INT, 0L);
+			int head = io_uring_cq.getKhead(cq).get(ValueLayout.JAVA_INT, 0L);
 			cqe = MemorySegment.NULL;
 			available = tail - head;
 			if (available == 0) {
@@ -56,7 +56,7 @@ public final class liburing {
 
 			long offset = io_uring_cqe.layout.byteSize();
 			long index = ((head & mask) << shift) * offset;
-			MemorySegment cqes = io_uring_cq.getCqes(cq);
+			MemorySegment cqes = io_uring_cq.getCqes(cq).reinterpret(index + offset); // Enough?
 			cqe.copyFrom(cqes.asSlice(index, offset));
 
 			int features = io_uring.getFeatures(ring.segment);
@@ -106,9 +106,9 @@ public final class liburing {
 			shift = 1;
 		}
 		if ((flags & constants.IORING_SETUP_SQPOLL) == 0) {
-			head = utils.getIntFromSegment(io_uring_sq.getKhead(sq));
+			head = io_uring_sq.getKhead(sq).get(ValueLayout.JAVA_INT, 0L);
 		} else {
-			head = utils.getIntFromSegment(io_uring_sq.getAcquireKhead(sq));
+			head = io_uring_sq.getAcquireKhead(sq).get(ValueLayout.JAVA_INT, 0L);
 		}
 
 		if ((next - head) <= io_uring_sq.getRingEntries(sq)) {
@@ -118,7 +118,7 @@ public final class liburing {
 			long offset = io_uring_sqe.layout.byteSize();
 			long index = ((sqeTail & ringMask) << shift) * offset;
 
-			MemorySegment sqes = io_uring_sq.getSqes(sq);
+			MemorySegment sqes = io_uring_sq.getSqes(sq).reinterpret(index + offset); // TODO: enough?
 			MemorySegment sqe = ring_allocations.getSqeSegment(ring.allocations);
 
 			sqe.copyFrom(sqes.asSlice(index, offset));

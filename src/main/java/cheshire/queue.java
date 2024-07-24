@@ -17,7 +17,7 @@ class queue {
 		// io_uring_smp_mb();
 		// std::atomic_thread_fence(std::memory_order_seq_cst);
 		// Review inside if -> uring_unlikely(IO_URING_READ_ONCE(*ring->sq.kflags)
-		long kflags = utils.getLongFromSegment(io_uring_sq.getAcquireKflags(io_uring.getSqSegment(ring)));
+		int kflags = io_uring_sq.getAcquireKflags(io_uring.getSqSegment(ring)).get(ValueLayout.JAVA_INT, 0L);
 		if ((kflags & constants.IORING_SQ_NEED_WAKEUP) != 0) {
 			flags.set(ValueLayout.JAVA_INT, 0L, (flags.get(ValueLayout.JAVA_INT, 0L) | constants.IORING_ENTER_SQ_WAKEUP));
 			return true;
@@ -145,13 +145,13 @@ class queue {
 			}
 		}
 		// return tail - IO_URING_READ_ONCE(*sq->khead);
-		return tail - utils.getIntFromSegment(io_uring_sq.getAcquireKhead(sq));
+		return tail - io_uring_sq.getAcquireKhead(sq).get(ValueLayout.JAVA_INT, 0L);
 	};
 
 	private static boolean cq_ring_needs_flush(MemorySegment ring) {
 		MemorySegment sq = io_uring.getSqSegment(ring);
 		// IO_URING_READ_ONCE(*ring->sq.kflags) // std::memory_order_relaxed
-		long kflags = utils.getLongFromSegment(io_uring_sq.getAcquireKflags(sq));
+		int kflags = io_uring_sq.getAcquireKflags(sq).get(ValueLayout.JAVA_INT, 0L);
 		return ((kflags & (constants.IORING_SQ_CQ_OVERFLOW | constants.IORING_SQ_TASKRUN)) != 0);
 	};
 
@@ -282,14 +282,14 @@ class queue {
 			ready = liburing.io_uring_cq_ready(ring);
 			if (ready != 0) {
 				MemorySegment cq = io_uring.getCqSegment(ring.segment);
-				int head = utils.getIntFromSegment(io_uring_cq.getKhead(cq));
+				int head = io_uring_cq.getKhead(cq).get(ValueLayout.JAVA_INT, 0L);
 				int mask = io_uring_cq.getRingMask(cq);
 				int last;
 
 				count = count > ready ? ready : count;
 				last = head + count;
 				long offset = io_uring_cqe.layout.byteSize();
-				MemorySegment cqesSegment = io_uring_cq.getCqes(cq);
+				MemorySegment cqesSegment = io_uring_cq.getCqes(cq).reinterpret((last + 1) * offset); // Enough?;
 				for (int i = 0; head != last; head++, i++) {
 					long index = ((head & mask) << shift) * offset;
 					cqes.setAtIndex(ValueLayout.ADDRESS, i, cqesSegment.asSlice(index, offset));
