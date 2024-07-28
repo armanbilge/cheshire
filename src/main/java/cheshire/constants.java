@@ -70,7 +70,7 @@ public final class constants {
 	public static final int EINVAL = 22;
 	public static final int ETIME = 62;
 	public static final long MAP_FAILED = -1L;
-	public static final long EADDRESS = Long.MAX_VALUE; // TODO: (uintptr_t) -4095UL
+	public static final long EADDRESS = -4095L;
 
 	// Review
 	public static final int _NSIG = 64;

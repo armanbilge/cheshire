@@ -10,7 +10,7 @@ class setup {
 	};
 
 	private static boolean IS_ERR(MemorySegment ptr) {
-		return ptr.address() >= constants.EADDRESS;
+		return Long.compareUnsigned(ptr.address(), constants.EADDRESS) >= 0;
 	};
 
 	private static void io_uring_setup_ring_pointers(MemorySegment p, MemorySegment sq, MemorySegment cq) {

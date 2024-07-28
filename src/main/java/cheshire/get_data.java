@@ -67,15 +67,11 @@ public class get_data {
 		hasTsVarHandle.set(data, value);
 	};
 
-	public static long getArg(MemorySegment data) {
-		return (long) argVarHandle.get(data);
+	public static MemorySegment getArg(MemorySegment data) {
+		return (MemorySegment) argVarHandle.get(data);
 	};
 
-	public static MemorySegment getArgSegment(MemorySegment data) {
-		return MemorySegment.ofAddress(getArg(data));
-	};
-
-	public static void setArg(MemorySegment data, long value) {
+	public static void setArg(MemorySegment data, MemorySegment value) {
 		argVarHandle.set(data, value);
 	};
 

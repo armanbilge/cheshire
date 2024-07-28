@@ -45,7 +45,7 @@ class queue {
 			boolean hasTs = get_data.getHasTs(data);
 			long sz = get_data.getSz(data);
 
-			ret = liburing.__io_uring_peek_cqe(ring, cqe, nrAvailable);
+			ret = liburing.__io_uring_peek_cqe(ring, new io_uring_cqe(cqe), nrAvailable);
 			if (ret != 0) {
 				if (err == 0) {
 					err = ret;
@@ -71,7 +71,7 @@ class queue {
 			if (!needEnter) {
 				break;
 			}
-			MemorySegment arg = get_data.getArgSegment(data)
+			MemorySegment arg = get_data.getArg(data)
 					.reinterpret(io_uring_getevents_arg.layout.byteSize()); // Enough?
 			if (looped && hasTs) {
 				if (utils.areSegmentsEquals(cqe, MemorySegment.NULL) && !utils.areSegmentsEquals(arg, MemorySegment.NULL)
@@ -104,18 +104,18 @@ class queue {
 			}
 		} while (true);
 
-		cqePtr.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, cqe);
+		cqePtr.copyFrom(cqe);
 		return err;
 	};
 
-	private static int __io_uring_get_cqe(io_uring ring, MemorySegment cqePtr, int submit, int waitNr,
+	public static int __io_uring_get_cqe(io_uring ring, MemorySegment cqePtr, int submit, int waitNr,
 			MemorySegment sigmask) {
 		MemorySegment data = ring_allocations.getDataSegment(ring.allocations);
 		get_data.setSubmit(data, submit);
 		get_data.setWaitNr(data, waitNr);
 		get_data.setGetFlags(data, 0);
 		get_data.setSz(data, constants._NSIG / 8);
-		get_data.setArg(data, sigmask.address());
+		get_data.setArg(data, sigmask);
 		return _io_uring_get_cqe(ring, cqePtr, data);
 	};
 
@@ -173,7 +173,7 @@ class queue {
 		get_data.setGetFlags(data, constants.IORING_ENTER_EXT_ARG);
 		get_data.setSz(data, arg.byteSize());
 		get_data.setHasTs(data, !utils.areSegmentsEquals(ts, MemorySegment.NULL));
-		get_data.setArg(data, arg.address());
+		get_data.setArg(data, arg);
 
 		return _io_uring_get_cqe(ring, cqePtr, data);
 	};
@@ -191,7 +191,7 @@ class queue {
 				return -constants.EAGAIN;
 			}
 		}
-		liburing.io_uring_prep_timeout(new io_uring_sqe(sqe), ts, waitNr, 0);
+		liburing.io_uring_prep_timeout(new io_uring_sqe(sqe), new __kernel_timespec(ts), waitNr, 0);
 		io_uring_sqe.setUserData(sqe, constants.LIBURING_UDATA_TIMEOUT);
 		return __io_uring_flush_sq(ring.segment);
 	};
@@ -251,7 +251,7 @@ class queue {
 				get_data.setGetFlags(data, constants.IORING_ENTER_EXT_ARG);
 				get_data.setSz(data, arg.byteSize());
 				get_data.setHasTs(data, !utils.areSegmentsEquals(ts, MemorySegment.NULL));
-				get_data.setArg(data, arg.address());
+				get_data.setArg(data, arg);
 
 				return _io_uring_get_cqe(ring, cqePtr, data);
 			}

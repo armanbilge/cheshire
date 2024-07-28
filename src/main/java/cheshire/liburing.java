@@ -33,7 +33,11 @@ public final class liburing {
 		io_uring_sqe.setPad2(sqe, 0L);
 	};
 
-	public static int __io_uring_peek_cqe(io_uring ring, MemorySegment cqePtr, MemorySegment nrAvailable) {
+	private static int io_uring_wait_cqe_nr(io_uring ring, io_uring_cqe cqePtr, int waitNr) {
+		return queue.__io_uring_get_cqe(ring, cqePtr.segment, 0, waitNr, MemorySegment.NULL);
+	};
+
+	public static int __io_uring_peek_cqe(io_uring ring, io_uring_cqe cqePtr, MemorySegment nrAvailable) {
 		int err = 0;
 		int available;
 		MemorySegment cq = io_uring.getCqSegment(ring.segment);
@@ -57,7 +61,7 @@ public final class liburing {
 			long offset = io_uring_cqe.layout.byteSize();
 			long index = ((head & mask) << shift) * offset;
 			MemorySegment cqes = io_uring_cq.getCqes(cq).reinterpret(index + offset); // Enough?
-			cqe.copyFrom(cqes.asSlice(index, offset));
+			cqe = cqes.asSlice(index, offset);
 
 			int features = io_uring.getFeatures(ring.segment);
 			long userData = io_uring_cqe.getUserData(cqe);
@@ -75,11 +79,25 @@ public final class liburing {
 			break;
 		} while (true);
 
-		cqePtr.reinterpret(ValueLayout.ADDRESS.byteSize()).set(ValueLayout.ADDRESS, 0L, cqe);
+		cqePtr.segment = cqe;
 		if (!utils.areSegmentsEquals(nrAvailable, MemorySegment.NULL)) {
 			nrAvailable.set(ValueLayout.JAVA_INT, 0L, available);
 		}
 		return err;
+	};
+
+	public static int io_uring_wait_cqe(io_uring ring, io_uring_cqe cqePtr) {
+		if (__io_uring_peek_cqe(ring, cqePtr, MemorySegment.NULL) == 0
+				&& !utils.areSegmentsEquals(cqePtr.segment, MemorySegment.NULL)) {
+			return 0;
+		}
+		return io_uring_wait_cqe_nr(ring, cqePtr, 1);
+	};
+
+	public static void io_uring_cqe_seen(io_uring ring, io_uring_cqe cqePtr) {
+		if (!utils.areSegmentsEquals(cqePtr.segment, MemorySegment.NULL)) {
+			liburing.io_uring_cq_advance(ring, 1);
+		}
 	};
 
 	public static int io_uring_queue_init(int entries, io_uring ring, int flags) {
@@ -119,9 +137,7 @@ public final class liburing {
 			long index = ((sqeTail & ringMask) << shift) * offset;
 
 			MemorySegment sqes = io_uring_sq.getSqes(sq).reinterpret(index + offset); // TODO: enough?
-			MemorySegment sqe = ring_allocations.getSqeSegment(ring.allocations);
-
-			sqe.copyFrom(sqes.asSlice(index, offset));
+			MemorySegment sqe = sqes.asSlice(index, offset);
 			io_uring_sq.setSqeTail(sq, next);
 			io_uring_initialize_sqe(sqe);
 			return sqe;
@@ -135,13 +151,13 @@ public final class liburing {
 		return queue.__io_uring_submit_and_wait(ring.segment, 0, flags);
 	};
 
-	public static int io_uring_submit_and_wait_timeout(io_uring ring, MemorySegment cqePtr, int waitNr,
-			MemorySegment ts, MemorySegment sigmask) {
-		return queue.io_uring_submit_and_wait_timeout(ring, cqePtr, waitNr, ts, sigmask);
+	public static int io_uring_submit_and_wait_timeout(io_uring ring, io_uring_cqe cqePtr, int waitNr,
+			__kernel_timespec ts, MemorySegment sigmask) {
+		return queue.io_uring_submit_and_wait_timeout(ring, cqePtr.segment, waitNr, ts.segment, sigmask);
 	};
 
-	public static int io_uring_wait_cqe_timeout(io_uring ring, MemorySegment cqePtr, MemorySegment ts) {
-		return queue.io_uring_wait_cqes(ring, cqePtr, 1, ts, MemorySegment.NULL);
+	public static int io_uring_wait_cqe_timeout(io_uring ring, io_uring_cqe cqePtr, __kernel_timespec ts) {
+		return queue.io_uring_wait_cqes(ring, cqePtr.segment, 1, ts.segment, MemorySegment.NULL);
 	};
 
 	public static int io_uring_peek_batch_cqe(
@@ -154,14 +170,18 @@ public final class liburing {
 	public static void io_uring_cq_advance(io_uring ring, int nr) {
 		if (nr != 0) {
 			MemorySegment cq = io_uring.getCqSegment(ring.segment);
-			MemorySegment khead = io_uring_cq.getKhead(cq);
-			io_uring_cq.setReleaseKhead(cq, MemorySegment.ofAddress(khead.address() + nr).reinterpret(khead.byteSize()));
+			MemorySegment kheadSegment = io_uring_cq.getKhead(cq);
+			int newValue = kheadSegment.get(ValueLayout.JAVA_INT, 0L) + nr;
+			// TODO: Add barrier
+			kheadSegment.set(ValueLayout.JAVA_INT, 0L, newValue);
+			io_uring_cq.setReleaseKhead(cq, kheadSegment);
 		}
 	};
 
 	public static int io_uring_cq_ready(io_uring ring) {
 		MemorySegment cq = io_uring.getCqSegment(ring.segment);
-		return (int) (io_uring_cq.getAcquireKtail(cq).address() - io_uring_cq.getKhead(cq).address());
+		return (int) (io_uring_cq.getAcquireKtail(cq).get(ValueLayout.JAVA_INT, 0L)
+				- io_uring_cq.getKhead(cq).get(ValueLayout.JAVA_INT, 0L));
 	};
 
 	public static void io_uring_prep_rw(int op, io_uring_sqe sqe, int fd, MemorySegment addr, int len, long offset) {
@@ -227,8 +247,8 @@ public final class liburing {
 		io_uring_sqe.setRwFlags(sqe.segment, flags);
 	};
 
-	public static void io_uring_prep_timeout(io_uring_sqe sqe, MemorySegment ts, int count, int flags) {
-		io_uring_prep_rw(constants.IORING_OP_TIMEOUT, sqe, -1, ts, 1, count);
+	public static void io_uring_prep_timeout(io_uring_sqe sqe, __kernel_timespec ts, int count, int flags) {
+		io_uring_prep_rw(constants.IORING_OP_TIMEOUT, sqe, -1, ts.segment, 1, count);
 		io_uring_sqe.setTimeoutFlags(sqe.segment, flags);
 	};
 

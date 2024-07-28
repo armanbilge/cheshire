@@ -16,8 +16,8 @@ public final class ring_allocations {
 			get_data.layout.withName("data"),
 			io_uring_rsrc_update.layout.withName("up"),
 			ValueLayout.JAVA_INT.withName("flags"),
-			ValueLayout.JAVA_INT.withName("nr_available"),
-			ValueLayout.JAVA_INT.withName("cqe_flags"))
+			ValueLayout.JAVA_INT.withName("cqe_flags"),
+			ValueLayout.JAVA_LONG.withName("nr_available"))
 			.withName("allocations");
 
 	public static MemorySegment getParamsSegment(MemorySegment data) {
@@ -57,7 +57,7 @@ public final class ring_allocations {
 
 	public static MemorySegment getNrAvailableSegment(MemorySegment data) {
 		return data.asSlice(ring_allocations.layout.byteOffset(PathElement.groupElement("nr_available")),
-				ValueLayout.JAVA_INT);
+				ValueLayout.JAVA_LONG);
 	};
 
 	public static MemorySegment getCqeFlagsSegment(MemorySegment data) {

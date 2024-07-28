@@ -10,7 +10,7 @@ import java.lang.invoke.VarHandle;
 
 public final class io_uring_sqe {
 
-	MemorySegment segment;
+	public MemorySegment segment;
 
 	public io_uring_sqe(Arena session) {
 		this.segment = session.allocate(layout);

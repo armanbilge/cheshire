@@ -10,10 +10,14 @@ import java.lang.invoke.VarHandle;
 
 public final class io_uring_cqe {
 
-	MemorySegment segment;
+	public MemorySegment segment;
 
 	public io_uring_cqe(Arena session) {
 		this.segment = session.allocate(layout);
+	}
+
+	public io_uring_cqe(MemorySegment s) {
+		this.segment = s;
 	}
 
 	public static final GroupLayout layout = MemoryLayout.structLayout(

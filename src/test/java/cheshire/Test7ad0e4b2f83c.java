@@ -1,4 +1,3 @@
-package cheshire;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
@@ -9,10 +8,14 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.BlockJUnit4ClassRunner;
 
-public class MyTest extends SuperclassTests {
+import cheshire.liburing;
+import cheshire.io_uring;
+import cheshire.io_uring_sqe;
+
+public class Test7ad0e4b2f83c {
 
 	@Test
-	public void simpleCheck() {
+	public void initTest() {
 		try (Arena memorySession = Arena.ofConfined()) {
 			io_uring ring = new io_uring(memorySession);
 			int ret;
