@@ -42,7 +42,7 @@ class queue {
 
 			int waitNr = get_data.getWaitNr(data);
 			int submit = get_data.getSubmit(data);
-			boolean hasTs = get_data.getHasTs(data);
+			boolean hasTs = get_data.getHasTs(data) != 0;
 			long sz = get_data.getSz(data);
 
 			ret = liburing.__io_uring_peek_cqe(ring, new io_uring_cqe(cqe), nrAvailable);
@@ -171,8 +171,8 @@ class queue {
 
 		get_data.setWaitNr(data, waitNr);
 		get_data.setGetFlags(data, constants.IORING_ENTER_EXT_ARG);
-		get_data.setSz(data, arg.byteSize());
-		get_data.setHasTs(data, !utils.areSegmentsEquals(ts, MemorySegment.NULL));
+		get_data.setSz(data, (int) arg.byteSize());
+		get_data.setHasTs(data, utils.areSegmentsEquals(ts, MemorySegment.NULL) ? 0 : 1);
 		get_data.setArg(data, arg);
 
 		return _io_uring_get_cqe(ring, cqePtr, data);
@@ -201,7 +201,7 @@ class queue {
 		boolean cqNeedsEnter = getevents || waitNr != 0 || cq_ring_needs_enter(ring);
 		int ret;
 
-		flags.set(ValueLayout.JAVA_INT, 0L, (flags.get(ValueLayout.JAVA_INT, 0L) | constants.IORING_ENTER_SQ_WAKEUP));
+		flags.set(ValueLayout.JAVA_INT, 0L, 0);
 		if (sq_ring_needs_enter(ring, submitted, flags) || cqNeedsEnter) {
 			if (cqNeedsEnter) {
 				flags.set(ValueLayout.JAVA_INT, 0L,
@@ -249,8 +249,8 @@ class queue {
 				get_data.setSubmit(data, __io_uring_flush_sq(ring.segment));
 				get_data.setWaitNr(data, waitNr);
 				get_data.setGetFlags(data, constants.IORING_ENTER_EXT_ARG);
-				get_data.setSz(data, arg.byteSize());
-				get_data.setHasTs(data, !utils.areSegmentsEquals(ts, MemorySegment.NULL));
+				get_data.setSz(data, (int) arg.byteSize());
+				get_data.setHasTs(data, utils.areSegmentsEquals(ts, MemorySegment.NULL) ? 0 : 1);
 				get_data.setArg(data, arg);
 
 				return _io_uring_get_cqe(ring, cqePtr, data);

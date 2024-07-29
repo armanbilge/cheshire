@@ -300,7 +300,7 @@ class setup {
 				return ret;
 			}
 			if (!utils.areSegmentsEquals(buf, MemorySegment.NULL)) {
-				io_uring.setIntFlags(ring, (char) (io_uring.getIntFlags(ring) | constants.INT_FLAG_APP_MEM));
+				io_uring.setIntFlags(ring, (byte) (io_uring.getIntFlags(ring) | constants.INT_FLAG_APP_MEM));
 			}
 		}
 
@@ -338,7 +338,7 @@ class setup {
 		if ((flags & constants.IORING_SETUP_REGISTERED_FD_ONLY) != 0) {
 			io_uring.setRingFd(ring, -1);
 			io_uring.setIntFlags(ring,
-					(char) (io_uring.getIntFlags(ring) | constants.INT_FLAG_REG_RING | constants.INT_FLAG_REG_REG_RING));
+					(byte) (io_uring.getIntFlags(ring) | constants.INT_FLAG_REG_RING | constants.INT_FLAG_REG_REG_RING));
 		} else {
 			io_uring.setRingFd(ring, fd);
 		}

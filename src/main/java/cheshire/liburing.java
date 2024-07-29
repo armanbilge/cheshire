@@ -23,8 +23,8 @@ import java.lang.foreign.ValueLayout;
 public final class liburing {
 
 	private static void io_uring_initialize_sqe(MemorySegment sqe) {
+		io_uring_sqe.setFlags(sqe, (byte) 0);
 		io_uring_sqe.setIoprio(sqe, (short) 0);
-		io_uring_sqe.setFlags(sqe, (char) 0);
 		io_uring_sqe.setRwFlags(sqe, 0);
 		io_uring_sqe.setBufIndex(sqe, (short) 0);
 		io_uring_sqe.setPersonality(sqe, (short) 0);
@@ -185,8 +185,8 @@ public final class liburing {
 	};
 
 	public static void io_uring_prep_rw(int op, io_uring_sqe sqe, int fd, MemorySegment addr, int len, long offset) {
-		io_uring_sqe.setOpcode(sqe.segment, (char) op);
-		io_uring_sqe.setFlags(sqe.segment, (char) 0);
+		io_uring_sqe.setOpcode(sqe.segment, (byte) op);
+		io_uring_sqe.setFlags(sqe.segment, (byte) 0);
 		io_uring_sqe.setIoprio(sqe.segment, (short) 0);
 		io_uring_sqe.setFd(sqe.segment, fd);
 		io_uring_sqe.setOff(sqe.segment, offset);

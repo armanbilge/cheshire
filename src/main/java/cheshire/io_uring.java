@@ -10,7 +10,7 @@ import java.lang.invoke.VarHandle;
 
 public final class io_uring {
 
-	MemorySegment segment;
+	public MemorySegment segment;
 	MemorySegment allocations;
 
 	public io_uring(Arena session) {
@@ -25,8 +25,8 @@ public final class io_uring {
 			ValueLayout.JAVA_INT.withName("ring_fd"),
 			ValueLayout.JAVA_INT.withName("features"),
 			ValueLayout.JAVA_INT.withName("enter_ring_fd"),
-			ValueLayout.JAVA_CHAR.withName("int_flags"),
-			MemoryLayout.sequenceLayout(3, ValueLayout.JAVA_CHAR).withName("pad"),
+			ValueLayout.JAVA_BYTE.withName("int_flags"),
+			MemoryLayout.sequenceLayout(3, ValueLayout.JAVA_BYTE).withName("pad"),
 			ValueLayout.JAVA_INT.withName("pad2"))
 			.withName("io_uring");
 
@@ -76,11 +76,11 @@ public final class io_uring {
 		enterRingFdVarHandle.set(data, value);
 	};
 
-	public static char getIntFlags(MemorySegment data) {
-		return (char) intFlagsVarHandle.get(data);
+	public static byte getIntFlags(MemorySegment data) {
+		return (byte) intFlagsVarHandle.get(data);
 	};
 
-	public static void setIntFlags(MemorySegment data, char value) {
+	public static void setIntFlags(MemorySegment data, byte value) {
 		intFlagsVarHandle.set(data, value);
 	};
 

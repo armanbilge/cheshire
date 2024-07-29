@@ -17,7 +17,7 @@ class register {
 
 	public static int io_uring_unregister_ring_fd(MemorySegment ring, MemorySegment up) {
 		io_uring_rsrc_update.setOffset(up, io_uring.getEnterRingFd(ring));
-		char intFlags = io_uring.getIntFlags(ring);
+		byte intFlags = io_uring.getIntFlags(ring);
 		if ((intFlags & constants.INT_FLAG_REG_RING) == 0) {
 			return -constants.EINVAL;
 		}
@@ -25,7 +25,7 @@ class register {
 		if (ret == 1) {
 			io_uring.setEnterRingFd(ring, io_uring.getRingFd(ring));
 			io_uring.setIntFlags(ring,
-					(char) (intFlags & ~(constants.INT_FLAG_REG_RING | constants.INT_FLAG_REG_REG_RING)));
+					(byte) (intFlags & ~(constants.INT_FLAG_REG_RING | constants.INT_FLAG_REG_REG_RING)));
 		}
 		return ret;
 	};

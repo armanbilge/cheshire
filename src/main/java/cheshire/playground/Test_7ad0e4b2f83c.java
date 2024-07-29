@@ -8,9 +8,8 @@ import cheshire.io_uring;
 import cheshire.io_uring_cqe;
 import cheshire.io_uring_sqe;
 import cheshire.liburing;
-import cheshire.utils;
 
-public class UringPlayground {
+public class Test_7ad0e4b2f83c {
 	public static void main(String[] args) {
 		try (Arena memorySession = Arena.ofConfined()) {
 			io_uring ring = new io_uring(memorySession);
@@ -27,7 +26,6 @@ public class UringPlayground {
 			liburing.io_uring_prep_nop(new io_uring_sqe(sqe));
 			ret = liburing.io_uring_submit(ring);
 			System.out.println("RET === 1 -> " + ret);
-
 			__kernel_timespec.setTvSec(ts1.segment, 5L);
 			__kernel_timespec.setTvNsec(ts1.segment, 0L);
 			ret = liburing.io_uring_wait_cqe_timeout(ring, cqe, ts1);
@@ -50,7 +48,7 @@ public class UringPlayground {
 			long end = System.currentTimeMillis();
 
 			System.out.println("Duration should be > 900 and < 1100: " + (end - init));
-			// liburing.io_uring_queue_exit(ring);
+			liburing.io_uring_queue_exit(ring);
 
 		} catch (Throwable e) {
 			e.printStackTrace();

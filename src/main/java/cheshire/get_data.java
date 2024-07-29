@@ -13,10 +13,9 @@ public class get_data {
 			ValueLayout.JAVA_INT.withName("submit"),
 			ValueLayout.JAVA_INT.withName("wait_nr"),
 			ValueLayout.JAVA_INT.withName("get_flags"),
+			ValueLayout.JAVA_INT.withName("sz"),
+			ValueLayout.JAVA_INT.withName("has_ts"),
 			MemoryLayout.paddingLayout(4),
-			ValueLayout.JAVA_LONG.withName("sz"),
-			ValueLayout.JAVA_BOOLEAN.withName("has_ts"),
-			MemoryLayout.paddingLayout(7),
 			ValueLayout.ADDRESS.withName("arg"))
 			.withName("get_data");
 
@@ -51,19 +50,19 @@ public class get_data {
 		getFlagsVarHandle.set(data, value);
 	};
 
-	public static long getSz(MemorySegment data) {
-		return (long) szVarHandle.get(data);
+	public static int getSz(MemorySegment data) {
+		return (int) szVarHandle.get(data);
 	};
 
-	public static void setSz(MemorySegment data, long value) {
+	public static void setSz(MemorySegment data, int value) {
 		szVarHandle.set(data, value);
 	};
 
-	public static boolean getHasTs(MemorySegment data) {
-		return (boolean) hasTsVarHandle.get(data);
+	public static int getHasTs(MemorySegment data) {
+		return (int) hasTsVarHandle.get(data);
 	};
 
-	public static void setHasTs(MemorySegment data, boolean value) {
+	public static void setHasTs(MemorySegment data, int value) {
 		hasTsVarHandle.set(data, value);
 	};
 

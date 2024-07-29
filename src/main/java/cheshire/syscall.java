@@ -44,8 +44,7 @@ class syscall {
 	};
 
 	private static MethodHandle close() {
-		FunctionDescriptor descriptor = FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
-				ValueLayout.JAVA_INT);
+		FunctionDescriptor descriptor = FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT);
 		return getMethod("close", descriptor);
 	};
 
@@ -110,7 +109,7 @@ class syscall {
 
 	public static int __sys_close(int fd) {
 		try {
-			int ret = (int) close().invokeExact(constants.__NR_io_uring_setup, fd);
+			int ret = (int) close().invokeExact(fd);
 			if (ret < 0) {
 				throw new RuntimeException("close syscall failed");
 			}
