@@ -34,7 +34,7 @@ public final class liburing {
 	};
 
 	private static int io_uring_wait_cqe_nr(io_uring ring, io_uring_cqe cqePtr, int waitNr) {
-		return queue.__io_uring_get_cqe(ring, cqePtr.segment, 0, waitNr, MemorySegment.NULL);
+		return queue.__io_uring_get_cqe(ring, cqePtr, 0, waitNr, MemorySegment.NULL);
 	};
 
 	public static int __io_uring_peek_cqe(io_uring ring, io_uring_cqe cqePtr, MemorySegment nrAvailable) {
@@ -49,7 +49,7 @@ public final class liburing {
 			shift = 1;
 		}
 		MemorySegment cqe = ring_allocations.getCqeSegment(ring.allocations);
-		do {
+		while (true) {
 			int tail = io_uring_cq.getAcquireKtail(cq).get(ValueLayout.JAVA_INT, 0L);
 			int head = io_uring_cq.getKhead(cq).get(ValueLayout.JAVA_INT, 0L);
 			cqe = MemorySegment.NULL;
@@ -77,13 +77,20 @@ public final class liburing {
 				cqe = MemorySegment.NULL;
 			}
 			break;
-		} while (true);
-
+		}
 		cqePtr.segment = cqe;
 		if (!utils.areSegmentsEquals(nrAvailable, MemorySegment.NULL)) {
 			nrAvailable.set(ValueLayout.JAVA_INT, 0L, available);
 		}
 		return err;
+	};
+
+	public static int io_uring_peek_cqe(io_uring ring, io_uring_cqe cqePtr) {
+		if (__io_uring_peek_cqe(ring, cqePtr, MemorySegment.NULL) == 0
+				&& !utils.areSegmentsEquals(cqePtr.segment, MemorySegment.NULL)) {
+			return 0;
+		}
+		return io_uring_wait_cqe_nr(ring, cqePtr, 0);
 	};
 
 	public static int io_uring_wait_cqe(io_uring ring, io_uring_cqe cqePtr) {
@@ -151,13 +158,18 @@ public final class liburing {
 		return queue.__io_uring_submit_and_wait(ring.segment, 0, flags);
 	};
 
+	public static int io_uring_submit_and_wait(io_uring ring, int waitNr) {
+		MemorySegment flags = ring_allocations.getFlagsSegment(ring.allocations);
+		return queue.__io_uring_submit_and_wait(ring.segment, waitNr, flags);
+	};
+
 	public static int io_uring_submit_and_wait_timeout(io_uring ring, io_uring_cqe cqePtr, int waitNr,
 			__kernel_timespec ts, MemorySegment sigmask) {
-		return queue.io_uring_submit_and_wait_timeout(ring, cqePtr.segment, waitNr, ts.segment, sigmask);
+		return queue.io_uring_submit_and_wait_timeout(ring, cqePtr, waitNr, ts.segment, sigmask);
 	};
 
 	public static int io_uring_wait_cqe_timeout(io_uring ring, io_uring_cqe cqePtr, __kernel_timespec ts) {
-		return queue.io_uring_wait_cqes(ring, cqePtr.segment, 1, ts.segment, MemorySegment.NULL);
+		return queue.io_uring_wait_cqes(ring, cqePtr, 1, ts.segment, MemorySegment.NULL);
 	};
 
 	public static int io_uring_peek_batch_cqe(

@@ -26,16 +26,17 @@ class queue {
 		return false;
 	};
 
-	private static int _io_uring_get_cqe(io_uring ring, MemorySegment cqePtr, MemorySegment data) {
+	private static int _io_uring_get_cqe(io_uring ring, io_uring_cqe cqePtr, MemorySegment data) {
 		MemorySegment cqe = ring_allocations.getCqeSegment(ring.allocations);
 		MemorySegment cqeFlags = ring_allocations.getCqeFlagsSegment(ring.allocations);
 		MemorySegment nrAvailable = ring_allocations.getNrAvailableSegment(ring.allocations);
 
 		cqe = MemorySegment.NULL;
+		io_uring_cqe cqePtrAux = new io_uring_cqe(cqe);
 		boolean looped = false;
 		int err = 0;
 
-		do {
+		while (true) {
 			boolean needEnter = false;
 			cqeFlags.set(ValueLayout.JAVA_INT, 0L, 0);
 			int ret;
@@ -44,15 +45,14 @@ class queue {
 			int submit = get_data.getSubmit(data);
 			boolean hasTs = get_data.getHasTs(data) != 0;
 			long sz = get_data.getSz(data);
-
-			ret = liburing.__io_uring_peek_cqe(ring, new io_uring_cqe(cqe), nrAvailable);
+			ret = liburing.__io_uring_peek_cqe(ring, cqePtrAux, nrAvailable);
 			if (ret != 0) {
 				if (err == 0) {
 					err = ret;
 				}
 				break;
 			}
-			if (utils.areSegmentsEquals(cqe, MemorySegment.NULL) && waitNr == 0 && submit == 0) {
+			if (utils.areSegmentsEquals(cqePtrAux.segment, MemorySegment.NULL) && waitNr == 0 && submit == 0) {
 				if (looped || !cq_ring_needs_enter(ring.segment)) {
 					if (err == 0) {
 						err = -constants.EAGAIN;
@@ -74,8 +74,8 @@ class queue {
 			MemorySegment arg = get_data.getArg(data)
 					.reinterpret(io_uring_getevents_arg.layout.byteSize()); // Enough?
 			if (looped && hasTs) {
-				if (utils.areSegmentsEquals(cqe, MemorySegment.NULL) && !utils.areSegmentsEquals(arg, MemorySegment.NULL)
-						&& err == 0) {
+				long ts = io_uring_getevents_arg.getTs(arg);
+				if (utils.areSegmentsEquals(cqePtrAux.segment, MemorySegment.NULL) && ts == 0 && err == 0) {
 					err = -constants.ETIME;
 				}
 				break;
@@ -102,13 +102,13 @@ class queue {
 				looped = true;
 				err = ret;
 			}
-		} while (true);
+		}
 
-		cqePtr.copyFrom(cqe);
+		cqePtr.segment = cqePtrAux.segment;
 		return err;
 	};
 
-	public static int __io_uring_get_cqe(io_uring ring, MemorySegment cqePtr, int submit, int waitNr,
+	public static int __io_uring_get_cqe(io_uring ring, io_uring_cqe cqePtr, int submit, int waitNr,
 			MemorySegment sigmask) {
 		MemorySegment data = ring_allocations.getDataSegment(ring.allocations);
 		get_data.setSubmit(data, submit);
@@ -160,7 +160,7 @@ class queue {
 		return ((flags & constants.IORING_SETUP_IOPOLL) != 0) || cq_ring_needs_flush(ring);
 	};
 
-	private static int io_uring_wait_cqes_new(io_uring ring, MemorySegment cqePtr, int waitNr, MemorySegment ts,
+	private static int io_uring_wait_cqes_new(io_uring ring, io_uring_cqe cqePtr, int waitNr, MemorySegment ts,
 			MemorySegment sigmask) {
 		MemorySegment arg = ring_allocations.getArgSegment(ring.allocations);
 		MemorySegment data = ring_allocations.getDataSegment(ring.allocations);
@@ -174,7 +174,6 @@ class queue {
 		get_data.setSz(data, (int) arg.byteSize());
 		get_data.setHasTs(data, utils.areSegmentsEquals(ts, MemorySegment.NULL) ? 0 : 1);
 		get_data.setArg(data, arg);
-
 		return _io_uring_get_cqe(ring, cqePtr, data);
 	};
 
@@ -220,7 +219,7 @@ class queue {
 		return ret;
 	};
 
-	public static int io_uring_wait_cqes(io_uring ring, MemorySegment cqePtr, int waitNr, MemorySegment ts,
+	public static int io_uring_wait_cqes(io_uring ring, io_uring_cqe cqePtr, int waitNr, MemorySegment ts,
 			MemorySegment sigmask) {
 		int toSubmit = 0;
 		if (!utils.areSegmentsEquals(ts, MemorySegment.NULL)) {
@@ -235,7 +234,7 @@ class queue {
 		return __io_uring_get_cqe(ring, cqePtr, toSubmit, waitNr, sigmask);
 	};
 
-	public static int io_uring_submit_and_wait_timeout(io_uring ring, MemorySegment cqePtr, int waitNr,
+	public static int io_uring_submit_and_wait_timeout(io_uring ring, io_uring_cqe cqePtr, int waitNr,
 			MemorySegment ts, MemorySegment sigmask) {
 		int toSubmit;
 		if (!utils.areSegmentsEquals(ts, MemorySegment.NULL)) {
@@ -252,7 +251,6 @@ class queue {
 				get_data.setSz(data, (int) arg.byteSize());
 				get_data.setHasTs(data, utils.areSegmentsEquals(ts, MemorySegment.NULL) ? 0 : 1);
 				get_data.setArg(data, arg);
-
 				return _io_uring_get_cqe(ring, cqePtr, data);
 			}
 			toSubmit = __io_uring_submit_timeout(ring, waitNr, ts);
@@ -292,7 +290,7 @@ class queue {
 				MemorySegment cqesSegment = io_uring_cq.getCqes(cq).reinterpret((last + 1) * offset); // Enough?;
 				for (int i = 0; head != last; head++, i++) {
 					long index = ((head & mask) << shift) * offset;
-					cqes.setAtIndex(ValueLayout.ADDRESS, i, cqesSegment.asSlice(index, offset));
+					cqes.asSlice(i * offset, offset).copyFrom(cqesSegment.asSlice(index, offset));
 				}
 				return count;
 			}

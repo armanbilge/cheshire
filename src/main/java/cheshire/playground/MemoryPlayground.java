@@ -8,9 +8,6 @@ import java.lang.foreign.ValueLayout;
 import java.lang.foreign.MemoryLayout.PathElement;
 import java.lang.invoke.VarHandle;
 
-import cheshire.io_uring_cq;
-import cheshire.io_uring_sq;
-
 public class MemoryPlayground {
 	public static void main(String[] args) {
 		GroupLayout pointLayout = MemoryLayout.structLayout(
