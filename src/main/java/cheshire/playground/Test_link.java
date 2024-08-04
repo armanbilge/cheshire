@@ -70,7 +70,7 @@ public class Test_link {
 				no_hardlink = 1;
 				continue;
 			}
-			if (userData == 1 && res == -constants.ETIME) {
+			if (userData == 1 && res != -constants.ETIME) {
 				System.out.println("timeout failed with " + res);
 				return 1;
 			}
@@ -144,11 +144,11 @@ public class Test_link {
 			}
 			long userData = io_uring_cqe.getUserData(cqe.segment);
 			int res = io_uring_cqe.getRes(cqe.segment);
-			if (userData == 1 && res == -constants.ETIME) {
+			if (userData == 1 && res != -constants.ETIME) {
 				System.out.println("timeout failed with " + res);
 				return 1;
 			}
-			if (userData == 2 && res == -constants.ETIME) {
+			if (userData == 2 && res != -constants.ETIME) {
 				System.out.println("timeout failed with " + res);
 				return 1;
 			}
@@ -348,4 +348,5 @@ public class Test_link {
 			e.printStackTrace();
 		}
 	}
+
 }
