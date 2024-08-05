@@ -172,10 +172,7 @@ public final class liburing {
 		return queue.io_uring_wait_cqes(ring, cqePtr, 1, ts.segment, MemorySegment.NULL);
 	};
 
-	public static int io_uring_peek_batch_cqe(
-			io_uring ring,
-			MemorySegment cqes,
-			int count) {
+	public static int io_uring_peek_batch_cqe(io_uring ring, MemorySegment cqes, int count) {
 		return queue.io_uring_peek_batch_cqe(ring, cqes, count);
 	};
 

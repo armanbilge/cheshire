@@ -64,7 +64,6 @@ public final class constants {
 	public static final int PROT_READ = 0x1;
 	public static final int PROT_WRITE = 0x2;
 
-	// Review error constants
 	public static final int ENOMEM = 5;
 	public static final int EAGAIN = 11;
 	public static final int EINVAL = 22;
