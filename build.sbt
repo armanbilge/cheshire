@@ -17,6 +17,8 @@ ThisBuild / githubWorkflowBuild ~= { steps =>
   }
 }
 
+ThisBuild / tlCiJavafmtCheck := true
+
 ThisBuild / githubWorkflowPublishPreamble +=
   WorkflowStep.Use(
     UseRef.Public("typelevel", "await-cirrus", "main"),
