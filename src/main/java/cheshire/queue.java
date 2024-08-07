@@ -27,7 +27,7 @@ class queue {
 	};
 
 	private static int _io_uring_get_cqe(io_uring ring, io_uring_cqe cqePtr, MemorySegment data) {
-		MemorySegment cqe = ring_allocations.getCqeSegment(ring.allocations);
+		MemorySegment cqe;
 		MemorySegment cqeFlags = ring_allocations.getCqeFlagsSegment(ring.allocations);
 		MemorySegment nrAvailable = ring_allocations.getNrAvailableSegment(ring.allocations);
 

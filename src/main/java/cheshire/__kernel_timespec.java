@@ -20,6 +20,14 @@ public class __kernel_timespec {
 		this.segment = s;
 	};
 
+	public __kernel_timespec() {
+		try (Arena session = Arena.ofShared()) {
+			this.segment = session.allocate(layout);
+		} catch (Throwable cause) {
+			throw new RuntimeException(cause);
+		}
+	};
+
 	public static final GroupLayout layout = MemoryLayout.structLayout(
 			ValueLayout.JAVA_LONG.withName("tv_sec"),
 			ValueLayout.JAVA_LONG.withName("tv_nsec"))

@@ -18,6 +18,15 @@ public final class io_uring {
 		this.allocations = session.allocate(ring_allocations.layout);
 	}
 
+	public io_uring() {
+		try (Arena session = Arena.ofShared()) {
+			this.segment = session.allocate(layout);
+			this.allocations = session.allocate(ring_allocations.layout);
+		} catch (Throwable cause) {
+			throw new RuntimeException(cause);
+		}
+	};
+
 	public static final GroupLayout layout = MemoryLayout.structLayout(
 			io_uring_sq.layout.withName("sq"),
 			io_uring_cq.layout.withName("cq"),

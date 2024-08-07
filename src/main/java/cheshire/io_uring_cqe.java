@@ -14,11 +14,19 @@ public final class io_uring_cqe {
 
 	public io_uring_cqe(Arena session) {
 		this.segment = session.allocate(layout);
-	}
+	};
 
 	public io_uring_cqe(MemorySegment s) {
 		this.segment = s;
-	}
+	};
+
+	public io_uring_cqe() {
+		try (Arena session = Arena.ofShared()) {
+			this.segment = session.allocate(layout);
+		} catch (Throwable cause) {
+			throw new RuntimeException(cause);
+		}
+	};
 
 	public static final GroupLayout layout = MemoryLayout.structLayout(
 			ValueLayout.JAVA_LONG.withName("user_data"),
