@@ -48,7 +48,7 @@ public final class liburing {
 		if ((flags & constants.IORING_SETUP_CQE32) != 0) {
 			shift = 1;
 		}
-		MemorySegment cqe = ring_allocations.getCqeSegment(ring.allocations);
+		MemorySegment cqe;
 		while (true) {
 			int tail = io_uring_cq.getAcquireKtail(cq).get(ValueLayout.JAVA_INT, 0L);
 			int head = io_uring_cq.getKhead(cq).get(ValueLayout.JAVA_INT, 0L);

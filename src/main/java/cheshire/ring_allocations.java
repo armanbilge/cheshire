@@ -10,8 +10,6 @@ public final class ring_allocations {
 
 	public static final GroupLayout layout = MemoryLayout.structLayout(
 			io_uring_params.layout.withName("params"),
-			io_uring_sqe.layout.withName("sqe"),
-			io_uring_cqe.layout.withName("cqe"),
 			io_uring_getevents_arg.layout.withName("arg"),
 			get_data.layout.withName("data"),
 			io_uring_rsrc_update.layout.withName("up"),
@@ -23,16 +21,6 @@ public final class ring_allocations {
 	public static MemorySegment getParamsSegment(MemorySegment data) {
 		return data.asSlice(ring_allocations.layout.byteOffset(PathElement.groupElement("params")),
 				io_uring_params.layout);
-	};
-
-	public static MemorySegment getSqeSegment(MemorySegment data) {
-		return data.asSlice(ring_allocations.layout.byteOffset(PathElement.groupElement("sqe")),
-				io_uring_sqe.layout);
-	};
-
-	public static MemorySegment getCqeSegment(MemorySegment data) {
-		return data.asSlice(ring_allocations.layout.byteOffset(PathElement.groupElement("cqe")),
-				io_uring_cqe.layout);
 	};
 
 	public static MemorySegment getArgSegment(MemorySegment data) {
